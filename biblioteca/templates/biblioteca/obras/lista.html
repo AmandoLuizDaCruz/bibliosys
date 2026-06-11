@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Obras</title>
+</head>
+<body>
+    <h1>Obras cadastradas</h1>
+
+    <p>
+        <a href="/">Início</a>
+        |
+        <a href="/obras/cadastrar/">Cadastrar nova obra</a>
+    </p>
+
+    <table border="1" cellpadding="8">
+        <thead>
+            <tr>
+                <th>Título</th>
+                <th>Autor</th>
+                <th>ISBN</th>
+                <th>Categoria</th>
+                <th>Quantidade</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for obra in obras %}
+                <tr>
+                    <td>{{ obra.titulo }}</td>
+                    <td>{{ obra.autor }}</td>
+                    <td>{{ obra.isbn }}</td>
+                    <td>{{ obra.categoria }}</td>
+                    <td>{{ obra.quantidade }}</td>
+                    <td>
+                        <a href="/obras/{{ obra.id }}/editar/">Editar</a>
+                        |
+                        <a href="/obras/{{ obra.id }}/excluir/">Excluir</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="6">Nenhuma obra cadastrada.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
