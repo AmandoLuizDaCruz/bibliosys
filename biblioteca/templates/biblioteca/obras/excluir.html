@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Excluir obra</title>
+</head>
+<body>
+    <h1>Excluir obra</h1>
+
+    <p>
+        Deseja realmente excluir a obra
+        <strong>{{ obra.titulo }}</strong>?
+    </p>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <button type="submit">Sim, excluir</button>
+    </form>
+
+    <p>
+        <a href="/obras/">Cancelar</a>
+    </p>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block titulo %}BiblioSys{% endblock %}</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            color: #1f2937;
+        }
+
+        header {
+            background: #1d4ed8;
+            color: white;
+            padding: 18px 30px;
+        }
+
+        nav a {
+            color: white;
+            margin-right: 20px;
+            text-decoration: none;
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 30px auto;
+            padding: 25px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border-bottom: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .botao {
+            display: inline-block;
+            padding: 10px 16px;
+            background: #1d4ed8;
+            color: white;
+            text-decoration: none;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .botao-editar {
+            background: #ca8a04;
+        }
+
+        .botao-excluir {
+            background: #dc2626;
+        }
+
+        .campo {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        form p {
+            margin-bottom: 18px;
+        }
+
+        .mensagem {
+            background: #dcfce7;
+            border: 1px solid #22c55e;
+            padding: 12px;
+            margin-bottom: 20px;
+        }
+
+        .acoes {
+            display: flex;
+            gap: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>BiblioSys</h1>
+
+        <nav>
+            <a href="{% url 'biblioteca:home' %}">Início</a>
+            <a href="{% url 'biblioteca:obra_lista' %}">Obras</a>
+            <a href="/admin/">Administração</a>
+        </nav>
+    </header>
+
+    <main>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mensagem">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% block conteudo %}
+        {% endblock %}
+    </main>
+</body>
+</html>
