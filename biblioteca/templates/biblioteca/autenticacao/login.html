@@ -1,0 +1,27 @@
+{% extends "biblioteca/base.html" %}
+
+{% block titulo %}
+Entrar | BiblioSys
+{% endblock %}
+
+{% block conteudo %}
+<h2>Entrar</h2>
+
+<form method="post">
+    {% csrf_token %}
+
+    {{ formulario.as_p }}
+
+    <button class="botao" type="submit">
+        Entrar
+    </button>
+</form>
+
+<p>
+    Ainda não possui conta?
+
+    <a href="{% url 'cadastro' %}">
+        Criar conta
+    </a>
+</p>
+{% endblock %}
