@@ -1,0 +1,59 @@
+{% extends "biblioteca/base.html" %}
+
+{% block titulo %}
+Confirmar exclusão | BiblioSys
+{% endblock %}
+
+{% block conteudo %}
+<h2>Excluir conta</h2>
+
+<div class="caixa-confirmacao">
+    <h3>Confirme a exclusão</h3>
+
+    <p>
+        Você está prestes a excluir permanentemente esta conta:
+    </p>
+
+    <p>
+        <strong>Usuário:</strong>
+        {{ conta.username }}
+    </p>
+
+    <p>
+        <strong>Nome:</strong>
+
+        {% if perfil %}
+            {{ perfil.nome_completo }}
+        {% else %}
+            {{ conta.get_full_name|default:"Não informado" }}
+        {% endif %}
+    </p>
+
+    <p>
+        <strong>E-mail:</strong>
+        {{ conta.email|default:"Não informado" }}
+    </p>
+
+    <p>
+        Essa ação removerá o acesso da pessoa ao sistema e não poderá
+        ser desfeita.
+    </p>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="acoes">
+            <button class="botao botao-perigo" type="submit">
+                Sim, excluir conta
+            </button>
+
+            <a
+                class="botao botao-secundario"
+                href="{% url 'gestao_usuarios' %}"
+            >
+                Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

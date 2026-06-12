@@ -1,0 +1,108 @@
+{% extends "admin/base.html" %}
+
+{% block title %}
+{{ title }} | BiblioSys
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+
+<style>
+    :root {
+        --primary: #16324f;
+        --secondary: #244f73;
+        --accent: #ffffff;
+        --header-color: #ffffff;
+        --link-fg: #2563eb;
+        --link-hover-color: #16324f;
+        --button-bg: #2563eb;
+        --button-hover-bg: #1d4ed8;
+        --default-button-bg: #16324f;
+        --default-button-hover-bg: #244f73;
+    }
+
+    #header {
+        background: #16324f;
+        min-height: 64px;
+        padding: 10px 28px;
+    }
+
+    #branding h1,
+    #branding h1 a:link,
+    #branding h1 a:visited {
+        color: white;
+        font-weight: bold;
+    }
+
+    .bibliosys-admin-nav {
+        display: flex;
+        align-items: center;
+        margin-left: 20px;
+    }
+
+    .bibliosys-admin-nav a {
+        display: inline-block;
+        padding: 10px 15px;
+        background: #244f73;
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: bold;
+    }
+
+    .bibliosys-admin-nav a:hover {
+        background: #326b99;
+    }
+
+    div.breadcrumbs {
+        background: #244f73;
+        padding: 12px 30px;
+    }
+
+    .module h2,
+    .module caption,
+    .inline-group h2 {
+        background: #16324f;
+    }
+
+    #content {
+        padding: 30px;
+    }
+
+    #content-main {
+        border-radius: 8px;
+    }
+
+    .button,
+    input[type="submit"],
+    input[type="button"],
+    .submit-row input {
+        border-radius: 5px;
+    }
+
+    table {
+        border-spacing: 0;
+    }
+
+    th,
+    td {
+        padding: 12px;
+    }
+</style>
+{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}">
+        BiblioSys — Administração
+    </a>
+</h1>
+{% endblock %}
+
+{% block nav-global %}
+<div class="bibliosys-admin-nav">
+    <a href="{% url 'home' %}">
+        ← Voltar ao BiblioSys
+    </a>
+</div>
+{% endblock %}
