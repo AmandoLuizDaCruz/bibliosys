@@ -1,6 +1,7 @@
 from django.urls import path
 
 from . import views
+from . import views_auditoria
 from . import views_circulacao
 from . import views_gestao_perfis
 from . import views_perfil
@@ -103,14 +104,25 @@ urlpatterns = [
         name="gestao_solicitacoes",
     ),
     path(
-        "gestao/solicitacoes/<int:solicitacao_id>/aprovar/",
+        (
+            "gestao/solicitacoes/"
+            "<int:solicitacao_id>/aprovar/"
+        ),
         views.gestao_aprovar_solicitacao,
         name="gestao_aprovar_solicitacao",
     ),
     path(
-        "gestao/solicitacoes/<int:solicitacao_id>/recusar/",
+        (
+            "gestao/solicitacoes/"
+            "<int:solicitacao_id>/recusar/"
+        ),
         views.gestao_recusar_solicitacao,
         name="gestao_recusar_solicitacao",
+    ),
+    path(
+        "gestao/historico/",
+        views_auditoria.gestao_historico,
+        name="gestao_historico",
     ),
 
     path(
@@ -119,7 +131,10 @@ urlpatterns = [
         name="meus_emprestimos",
     ),
     path(
-        "circulacao/livros/<int:obra_id>/solicitar/",
+        (
+            "circulacao/livros/"
+            "<int:obra_id>/solicitar/"
+        ),
         views_circulacao.solicitar_livro,
         name="solicitar_livro",
     ),

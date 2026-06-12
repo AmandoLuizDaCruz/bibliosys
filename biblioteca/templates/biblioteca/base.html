@@ -190,6 +190,44 @@
             color: var(--azul-escuro);
         }
 
+        .atalhos-gestao {
+            display: grid;
+            grid-template-columns: repeat(
+                auto-fit,
+                minmax(220px, 1fr)
+            );
+            gap: 16px;
+            margin: 22px 0 30px;
+        }
+
+        .atalho-gestao {
+            display: block;
+            padding: 22px;
+            border: 1px solid var(--borda);
+            border-radius: 9px;
+            background: #f8fafc;
+            color: var(--texto);
+            text-decoration: none;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .atalho-gestao:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 14px rgba(0, 0, 0, 0.1);
+        }
+
+        .atalho-gestao strong {
+            display: block;
+            margin-bottom: 7px;
+            color: var(--azul-escuro);
+            font-size: 18px;
+        }
+
+        .atalho-gestao span {
+            color: var(--cinza);
+            font-size: 14px;
+        }
+
         .table-wrap {
             width: 100%;
             overflow-x: auto;
@@ -343,39 +381,29 @@
         <h1>BiblioSys</h1>
 
         <nav>
-            <a href="{% url 'home' %}">
-                Início
-            </a>
-
             {% if user.is_authenticated %}
-                <a href="{% url 'listar_obras' %}">
-                    Livros
-                </a>
-
-                {% if not user.is_superuser %}
-                    <a href="{% url 'meus_emprestimos' %}">
-                        Meus empréstimos
-                    </a>
-                {% endif %}
-
-                {% if user.perfil_leitor.funcionario_aprovado %}
-                    <a href="{% url 'notificacoes_funcionarios' %}">
-                        Reservas dos leitores
-                    </a>
-                {% endif %}
-
                 {% if user.is_superuser %}
                     <a href="{% url 'gestao_dashboard' %}">
                         Gestão
                     </a>
-
-                    <a href="{% url 'gestao_usuarios' %}">
-                        Contas
+                {% else %}
+                    <a href="{% url 'home' %}">
+                        Início
                     </a>
 
-                    <a href="{% url 'gestao_solicitacoes' %}">
-                        Solicitações
+                    <a href="{% url 'listar_obras' %}">
+                        Livros
                     </a>
+
+                    <a href="{% url 'meus_emprestimos' %}">
+                        Meus empréstimos
+                    </a>
+
+                    {% if user.perfil_leitor.funcionario_aprovado %}
+                        <a href="{% url 'notificacoes_funcionarios' %}">
+                            Reservas dos leitores
+                        </a>
+                    {% endif %}
                 {% endif %}
 
                 <span class="usuario-logado">
@@ -402,6 +430,10 @@
                     Sair
                 </a>
             {% else %}
+                <a href="{% url 'home' %}">
+                    Início
+                </a>
+
                 <a href="{% url 'login' %}">
                     Entrar
                 </a>

@@ -33,21 +33,20 @@ def administrador_required(view_function):
 
 
 def pode_gerenciar_obras(usuario):
+    """
+    Somente funcionários aprovados podem gerenciar livros.
+
+    O administrador não participa da gestão do acervo.
+    """
     if not usuario.is_authenticated:
         return False
 
     if usuario.is_superuser:
-        return True
-
-    try:
-        solicitacao = usuario.solicitacao_funcionario
-    except SolicitacaoFuncionario.DoesNotExist:
         return False
 
-    return (
-        solicitacao.status
-        == SolicitacaoFuncionario.Status.APROVADA
-    )
+    return usuario.groups.filter(
+        name="Funcionarios"
+    ).exists()
 
 
 def home(request):
@@ -55,7 +54,9 @@ def home(request):
 
     if request.user.is_authenticated:
         try:
-            solicitacao = request.user.solicitacao_funcionario
+            solicitacao = (
+                request.user.solicitacao_funcionario
+            )
         except SolicitacaoFuncionario.DoesNotExist:
             pass
 
@@ -73,6 +74,9 @@ def home(request):
 
 def entrar(request):
     if request.user.is_authenticated:
+        if request.user.is_superuser:
+            return redirect("gestao_dashboard")
+
         return redirect("home")
 
     formulario = AuthenticationForm(
@@ -81,13 +85,21 @@ def entrar(request):
     )
 
     if request.method == "POST" and formulario.is_valid():
-        login(request, formulario.get_user())
+        usuario = formulario.get_user()
+
+        login(request, usuario)
+
+        if usuario.is_superuser:
+            return redirect("gestao_dashboard")
+
         return redirect("home")
 
     return render(
         request,
         "biblioteca/autenticacao/login.html",
-        {"formulario": formulario},
+        {
+            "formulario": formulario,
+        },
     )
 
 
@@ -101,6 +113,7 @@ def cadastrar_usuario(request):
 
     if request.method == "POST" and formulario.is_valid():
         usuario = formulario.save()
+
         login(request, usuario)
 
         try:
@@ -124,7 +137,9 @@ def cadastrar_usuario(request):
     return render(
         request,
         "biblioteca/autenticacao/cadastro.html",
-        {"formulario": formulario},
+        {
+            "formulario": formulario,
+        },
     )
 
 
@@ -159,8 +174,15 @@ def cadastrar_obra(request):
     if not pode_gerenciar_obras(request.user):
         messages.error(
             request,
-            "Você não possui permissão para cadastrar livros.",
+            (
+                "Somente funcionários aprovados podem "
+                "cadastrar livros."
+            ),
         )
+
+        if request.user.is_superuser:
+            return redirect("gestao_dashboard")
+
         return redirect("listar_obras")
 
     formulario = ObraForm(request.POST or None)
@@ -190,11 +212,21 @@ def editar_obra(request, obra_id):
     if not pode_gerenciar_obras(request.user):
         messages.error(
             request,
-            "Você não possui permissão para editar livros.",
+            (
+                "Somente funcionários aprovados podem "
+                "editar livros."
+            ),
         )
+
+        if request.user.is_superuser:
+            return redirect("gestao_dashboard")
+
         return redirect("listar_obras")
 
-    obra = get_object_or_404(Obra, id=obra_id)
+    obra = get_object_or_404(
+        Obra,
+        id=obra_id,
+    )
 
     formulario = ObraForm(
         request.POST or None,
@@ -226,11 +258,21 @@ def excluir_obra(request, obra_id):
     if not pode_gerenciar_obras(request.user):
         messages.error(
             request,
-            "Você não possui permissão para excluir livros.",
+            (
+                "Somente funcionários aprovados podem "
+                "excluir livros."
+            ),
         )
+
+        if request.user.is_superuser:
+            return redirect("gestao_dashboard")
+
         return redirect("listar_obras")
 
-    obra = get_object_or_404(Obra, id=obra_id)
+    obra = get_object_or_404(
+        Obra,
+        id=obra_id,
+    )
 
     if request.method == "POST":
         obra.delete()
@@ -245,13 +287,14 @@ def excluir_obra(request, obra_id):
     return render(
         request,
         "biblioteca/obras/excluir.html",
-        {"obra": obra},
+        {
+            "obra": obra,
+        },
     )
 
 
 # =========================================================
-# CRUD ANTIGO DE LEITORES
-# Mantido para preservar o segundo CRUD do trabalho.
+# LEITORES
 # =========================================================
 
 @login_required(login_url="login")
@@ -270,16 +313,24 @@ def listar_leitores(request):
     return render(
         request,
         "biblioteca/leitores/lista.html",
-        {"leitores": leitores},
+        {
+            "leitores": leitores,
+        },
     )
 
 
 @login_required(login_url="login")
 def cadastrar_leitor(request):
     if not request.user.is_superuser:
+        messages.error(
+            request,
+            "Somente o administrador pode cadastrar leitores.",
+        )
         return redirect("home")
 
-    formulario = LeitorForm(request.POST or None)
+    formulario = LeitorForm(
+        request.POST or None
+    )
 
     if request.method == "POST" and formulario.is_valid():
         formulario.save()
@@ -304,6 +355,10 @@ def cadastrar_leitor(request):
 @login_required(login_url="login")
 def editar_leitor(request, leitor_id):
     if not request.user.is_superuser:
+        messages.error(
+            request,
+            "Somente o administrador pode editar leitores.",
+        )
         return redirect("home")
 
     leitor = get_object_or_404(
@@ -339,6 +394,10 @@ def editar_leitor(request, leitor_id):
 @login_required(login_url="login")
 def excluir_leitor(request, leitor_id):
     if not request.user.is_superuser:
+        messages.error(
+            request,
+            "Somente o administrador pode excluir leitores.",
+        )
         return redirect("home")
 
     leitor = get_object_or_404(
@@ -348,7 +407,10 @@ def excluir_leitor(request, leitor_id):
 
     if request.method == "POST":
         if leitor.usuario:
-            if leitor.usuario.username.casefold() == "admin":
+            if (
+                leitor.usuario.username.casefold()
+                == "admin"
+            ):
                 messages.error(
                     request,
                     "A conta Admin não pode ser excluída.",
@@ -369,7 +431,9 @@ def excluir_leitor(request, leitor_id):
     return render(
         request,
         "biblioteca/leitores/excluir.html",
-        {"leitor": leitor},
+        {
+            "leitor": leitor,
+        },
     )
 
 
@@ -382,7 +446,11 @@ def gestao_dashboard(request):
     solicitacoes_pendentes = (
         SolicitacaoFuncionario.objects
         .filter(
-            status=SolicitacaoFuncionario.Status.PENDENTE
+            status=(
+                SolicitacaoFuncionario
+                .Status
+                .PENDENTE
+            )
         )
         .select_related("usuario")
         .order_by("-criada_em")
@@ -391,9 +459,12 @@ def gestao_dashboard(request):
     contexto = {
         "total_contas": User.objects.count(),
         "total_leitores": Leitor.objects.count(),
-        "total_livros": Obra.objects.count(),
-        "total_pendentes": solicitacoes_pendentes.count(),
-        "solicitacoes_recentes": solicitacoes_pendentes[:5],
+        "total_pendentes": (
+            solicitacoes_pendentes.count()
+        ),
+        "solicitacoes_recentes": (
+            solicitacoes_pendentes[:5]
+        ),
     }
 
     return render(
@@ -405,9 +476,14 @@ def gestao_dashboard(request):
 
 @administrador_required
 def gestao_usuarios(request):
-    consulta = request.GET.get("q", "").strip()
+    consulta = request.GET.get(
+        "q",
+        "",
+    ).strip()
 
-    usuarios = User.objects.all().order_by("username")
+    usuarios = User.objects.all().order_by(
+        "username"
+    )
 
     if consulta:
         usuarios = usuarios.filter(
@@ -415,8 +491,14 @@ def gestao_usuarios(request):
             | Q(first_name__icontains=consulta)
             | Q(last_name__icontains=consulta)
             | Q(email__icontains=consulta)
-            | Q(perfil_leitor__nome_completo__icontains=consulta)
-            | Q(perfil_leitor__cpf__icontains=consulta)
+            | Q(
+                perfil_leitor__nome_completo__icontains=(
+                    consulta
+                )
+            )
+            | Q(
+                perfil_leitor__cpf__icontains=consulta
+            )
         ).distinct()
 
     contas = []
@@ -428,7 +510,9 @@ def gestao_usuarios(request):
             perfil = None
 
         try:
-            solicitacao = usuario.solicitacao_funcionario
+            solicitacao = (
+                usuario.solicitacao_funcionario
+            )
         except SolicitacaoFuncionario.DoesNotExist:
             solicitacao = None
 
@@ -436,11 +520,9 @@ def gestao_usuarios(request):
             nivel = "Administrador master"
             classe_nivel = "administrador"
 
-        elif (
-            solicitacao
-            and solicitacao.status
-            == SolicitacaoFuncionario.Status.APROVADA
-        ):
+        elif usuario.groups.filter(
+            name="Funcionarios"
+        ).exists():
             nivel = "Funcionário"
             classe_nivel = "funcionario"
 
@@ -494,7 +576,10 @@ def gestao_excluir_usuario(request, usuario_id):
     if usuario.username.casefold() == "admin":
         messages.error(
             request,
-            "A conta Admin é protegida e não pode ser excluída.",
+            (
+                "A conta Admin é protegida e "
+                "não pode ser excluída."
+            ),
         )
         return redirect("gestao_usuarios")
 
@@ -524,16 +609,18 @@ def gestao_excluir_usuario(request, usuario_id):
                     cpf=perfil.cpf
                 )
 
-        # Remove qualquer perfil relacionado ou registro órfão
-        # que possua o mesmo e-mail ou CPF.
-        Leitor.objects.filter(filtros).delete()
+        Leitor.objects.filter(
+            filtros
+        ).delete()
 
-        # Exclui login, solicitações e notificações relacionadas.
         usuario.delete()
 
         messages.success(
             request,
-            f'A conta "{nome_usuario}" foi excluída completamente.',
+            (
+                f'A conta "{nome_usuario}" '
+                "foi excluída completamente."
+            ),
         )
 
         return redirect("gestao_usuarios")
@@ -553,18 +640,32 @@ def gestao_solicitacoes(request):
     pendentes = (
         SolicitacaoFuncionario.objects
         .filter(
-            status=SolicitacaoFuncionario.Status.PENDENTE
+            status=(
+                SolicitacaoFuncionario
+                .Status
+                .PENDENTE
+            )
         )
-        .select_related("usuario", "usuario__perfil_leitor")
+        .select_related(
+            "usuario",
+            "usuario__perfil_leitor",
+        )
         .order_by("-criada_em")
     )
 
     historico = (
         SolicitacaoFuncionario.objects
         .exclude(
-            status=SolicitacaoFuncionario.Status.PENDENTE
+            status=(
+                SolicitacaoFuncionario
+                .Status
+                .PENDENTE
+            )
         )
-        .select_related("usuario", "analisada_por")
+        .select_related(
+            "usuario",
+            "analisada_por",
+        )
         .order_by("-analisada_em")
     )
 
@@ -599,7 +700,6 @@ def gestao_aprovar_solicitacao(
             request,
             "Essa solicitação já foi analisada.",
         )
-
         return redirect("gestao_solicitacoes")
 
     solicitacao.aprovar(request.user)
@@ -608,7 +708,8 @@ def gestao_aprovar_solicitacao(
         request,
         (
             f"O funcionário "
-            f"{solicitacao.usuario.username} foi aprovado."
+            f"{solicitacao.usuario.username} "
+            "foi aprovado."
         ),
     )
 
@@ -636,7 +737,6 @@ def gestao_recusar_solicitacao(
             request,
             "Essa solicitação já foi analisada.",
         )
-
         return redirect("gestao_solicitacoes")
 
     solicitacao.recusar(request.user)
@@ -645,7 +745,8 @@ def gestao_recusar_solicitacao(
         request,
         (
             f"A solicitação de "
-            f"{solicitacao.usuario.username} foi recusada."
+            f"{solicitacao.usuario.username} "
+            "foi recusada."
         ),
     )
 

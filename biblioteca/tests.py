@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.test import TestCase
 from django.urls import reverse
 
@@ -10,13 +11,32 @@ User = get_user_model()
 
 class ObraCRUDTests(TestCase):
     def setUp(self):
-        self.administrador = User.objects.create_superuser(
-            username="admin_teste",
-            email="admin_teste@email.com",
+        self.funcionario = User.objects.create_user(
+            username="funcionario_teste",
+            email="funcionario_teste@email.com",
             password="123",
         )
 
-        self.client.force_login(self.administrador)
+        Leitor.objects.create(
+            usuario=self.funcionario,
+            nome_completo="Funcionário Teste",
+            cpf="555.555.555-55",
+            email="funcionario_teste@email.com",
+            telefone="(35) 99999-5555",
+            endereco="Rua dos Testes, 10",
+            tipo_vinculo="FUNCIONARIO",
+            ativo=True,
+        )
+
+        grupo, _ = Group.objects.get_or_create(
+            name="Funcionarios"
+        )
+
+        self.funcionario.groups.add(grupo)
+
+        self.client.force_login(
+            self.funcionario
+        )
 
         self.obra = Obra.objects.create(
             titulo="Dom Casmurro",
@@ -33,7 +53,11 @@ class ObraCRUDTests(TestCase):
             reverse("listar_obras")
         )
 
-        self.assertEqual(resposta.status_code, 200)
+        self.assertEqual(
+            resposta.status_code,
+            200,
+        )
+
         self.assertContains(
             resposta,
             "Dom Casmurro",
@@ -55,7 +79,10 @@ class ObraCRUDTests(TestCase):
             dados,
         )
 
-        self.assertEqual(resposta.status_code, 302)
+        self.assertEqual(
+            resposta.status_code,
+            302,
+        )
 
         self.assertTrue(
             Obra.objects.filter(
@@ -69,7 +96,9 @@ class ObraCRUDTests(TestCase):
             "autor": "Machado de Assis",
             "isbn": self.obra.isbn,
             "editora": self.obra.editora,
-            "ano_publicacao": self.obra.ano_publicacao,
+            "ano_publicacao": (
+                self.obra.ano_publicacao
+            ),
             "categoria": self.obra.categoria,
             "quantidade": 5,
         }
@@ -84,7 +113,10 @@ class ObraCRUDTests(TestCase):
 
         self.obra.refresh_from_db()
 
-        self.assertEqual(resposta.status_code, 302)
+        self.assertEqual(
+            resposta.status_code,
+            302,
+        )
 
         self.assertEqual(
             self.obra.titulo,
@@ -104,11 +136,49 @@ class ObraCRUDTests(TestCase):
             )
         )
 
-        self.assertEqual(resposta.status_code, 302)
+        self.assertEqual(
+            resposta.status_code,
+            302,
+        )
 
         self.assertFalse(
             Obra.objects.filter(
                 id=self.obra.id
+            ).exists()
+        )
+
+    def test_admin_nao_pode_cadastrar_obra(self):
+        administrador = User.objects.create_superuser(
+            username="Admin",
+            email="admin@teste.com",
+            password="Admin",
+        )
+
+        self.client.force_login(
+            administrador
+        )
+
+        resposta = self.client.post(
+            reverse("cadastrar_obra"),
+            {
+                "titulo": "Livro do Admin",
+                "autor": "Autor",
+                "isbn": "9780000000099",
+                "editora": "Editora",
+                "ano_publicacao": 2026,
+                "categoria": "Teste",
+                "quantidade": 2,
+            },
+        )
+
+        self.assertEqual(
+            resposta.status_code,
+            302,
+        )
+
+        self.assertFalse(
+            Obra.objects.filter(
+                titulo="Livro do Admin"
             ).exists()
         )
 
@@ -121,7 +191,9 @@ class LeitorCRUDTests(TestCase):
             password="123",
         )
 
-        self.client.force_login(self.administrador)
+        self.client.force_login(
+            self.administrador
+        )
 
         self.leitor = Leitor.objects.create(
             nome_completo="Maria da Silva",
@@ -138,7 +210,10 @@ class LeitorCRUDTests(TestCase):
             reverse("listar_leitores")
         )
 
-        self.assertEqual(resposta.status_code, 200)
+        self.assertEqual(
+            resposta.status_code,
+            200,
+        )
 
         self.assertContains(
             resposta,
@@ -161,7 +236,10 @@ class LeitorCRUDTests(TestCase):
             dados,
         )
 
-        self.assertEqual(resposta.status_code, 302)
+        self.assertEqual(
+            resposta.status_code,
+            302,
+        )
 
         leitor = Leitor.objects.get(
             email="joao@email.com"
@@ -179,7 +257,9 @@ class LeitorCRUDTests(TestCase):
 
     def test_editar_leitor(self):
         dados = {
-            "nome_completo": "Maria da Silva Atualizada",
+            "nome_completo": (
+                "Maria da Silva Atualizada"
+            ),
             "cpf": self.leitor.cpf,
             "email": self.leitor.email,
             "telefone": self.leitor.telefone,
@@ -198,7 +278,10 @@ class LeitorCRUDTests(TestCase):
 
         self.leitor.refresh_from_db()
 
-        self.assertEqual(resposta.status_code, 302)
+        self.assertEqual(
+            resposta.status_code,
+            302,
+        )
 
         self.assertEqual(
             self.leitor.nome_completo,
@@ -218,7 +301,10 @@ class LeitorCRUDTests(TestCase):
             )
         )
 
-        self.assertEqual(resposta.status_code, 302)
+        self.assertEqual(
+            resposta.status_code,
+            302,
+        )
 
         self.assertFalse(
             Leitor.objects.filter(
