@@ -8,9 +8,7 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>
-        {% block titulo %}BiblioSys{% endblock %}
-    </title>
+    <title>{% block titulo %}BiblioSys{% endblock %}</title>
 
     <style>
         * {
@@ -81,10 +79,6 @@
             font-weight: bold;
         }
 
-        .link-usuario:hover {
-            background: rgba(255, 255, 255, 0.12);
-        }
-
         main {
             width: calc(100% - 30px);
             max-width: 1200px;
@@ -96,13 +90,13 @@
             box-shadow: 0 3px 12px rgba(0, 0, 0, 0.07);
         }
 
-        h2 {
-            margin-top: 0;
+        h2,
+        h3 {
             color: var(--azul-escuro);
         }
 
-        h3 {
-            color: var(--azul-escuro);
+        h2 {
+            margin-top: 0;
         }
 
         .mensagem {
@@ -123,10 +117,6 @@
             text-decoration: none;
             cursor: pointer;
             font-size: 14px;
-        }
-
-        .botao:hover {
-            opacity: 0.88;
         }
 
         .botao-secundario {
@@ -188,44 +178,6 @@
             font-size: 32px;
             font-weight: bold;
             color: var(--azul-escuro);
-        }
-
-        .atalhos-gestao {
-            display: grid;
-            grid-template-columns: repeat(
-                auto-fit,
-                minmax(220px, 1fr)
-            );
-            gap: 16px;
-            margin: 22px 0 30px;
-        }
-
-        .atalho-gestao {
-            display: block;
-            padding: 22px;
-            border: 1px solid var(--borda);
-            border-radius: 9px;
-            background: #f8fafc;
-            color: var(--texto);
-            text-decoration: none;
-            transition: transform 0.15s, box-shadow 0.15s;
-        }
-
-        .atalho-gestao:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 14px rgba(0, 0, 0, 0.1);
-        }
-
-        .atalho-gestao strong {
-            display: block;
-            margin-bottom: 7px;
-            color: var(--azul-escuro);
-            font-size: 18px;
-        }
-
-        .atalho-gestao span {
-            color: var(--cinza);
-            font-size: 14px;
         }
 
         .table-wrap {
@@ -300,7 +252,6 @@
             display: flex;
             gap: 8px;
             width: 100%;
-            max-width: 620px;
             margin-bottom: 20px;
         }
 
@@ -330,15 +281,6 @@
 
         input[type="checkbox"] {
             width: auto;
-        }
-
-        .caixa-confirmacao {
-            max-width: 650px;
-            padding: 22px;
-            border: 1px solid #fecaca;
-            border-left: 6px solid var(--vermelho);
-            border-radius: 8px;
-            background: #fff7f7;
         }
 
         .vazio {
@@ -386,24 +328,24 @@
                     <a href="{% url 'gestao_dashboard' %}">
                         Gestão
                     </a>
-                {% else %}
-                    <a href="{% url 'home' %}">
-                        Início
-                    </a>
 
-                    <a href="{% url 'listar_obras' %}">
-                        Livros
+                {% elif user.perfil_leitor.funcionario_aprovado %}
+                    <a href="{% url 'cadastrar_livro' %}">
+                        Cadastro de livros
                     </a>
 
                     <a href="{% url 'meus_emprestimos' %}">
                         Meus empréstimos
                     </a>
 
-                    {% if user.perfil_leitor.funcionario_aprovado %}
-                        <a href="{% url 'notificacoes_funcionarios' %}">
-                            Reservas dos leitores
-                        </a>
-                    {% endif %}
+                    <a href="{% url 'leitores_busca' %}">
+                        Leitores
+                    </a>
+
+                {% else %}
+                    <a href="{% url 'meus_emprestimos' %}">
+                        Meus empréstimos
+                    </a>
                 {% endif %}
 
                 <span class="usuario-logado">
@@ -411,7 +353,6 @@
                         <a
                             class="link-usuario"
                             href="{% url 'gestao_dashboard' %}"
-                            title="Abrir área de gestão"
                         >
                             {{ user.username }}
                         </a>
@@ -419,7 +360,6 @@
                         <a
                             class="link-usuario"
                             href="{% url 'editar_meu_perfil' %}"
-                            title="Editar meus dados"
                         >
                             {{ user.username }}
                         </a>
@@ -429,11 +369,8 @@
                 <a href="{% url 'logout' %}">
                     Sair
                 </a>
-            {% else %}
-                <a href="{% url 'home' %}">
-                    Início
-                </a>
 
+            {% else %}
                 <a href="{% url 'login' %}">
                     Entrar
                 </a>

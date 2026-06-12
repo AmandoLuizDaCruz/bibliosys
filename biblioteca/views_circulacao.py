@@ -3,11 +3,13 @@ from functools import wraps
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
+from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from .models import (
     Emprestimo,
+    Exemplar,
     NotificacaoFuncionario,
     Obra,
     Reserva,
@@ -16,12 +18,15 @@ from .servicos_circulacao import (
     expirar_reservas_vencidas,
     funcionario_aprovado,
     registrar_retirada_reserva,
+    renovar_emprestimo,
     solicitar_obra,
 )
 
 
 def obter_endereco_ip(request):
-    encaminhado = request.META.get("HTTP_X_FORWARDED_FOR")
+    encaminhado = request.META.get(
+        "HTTP_X_FORWARDED_FOR"
+    )
 
     if encaminhado:
         return encaminhado.split(",")[0].strip()
@@ -40,9 +45,13 @@ def funcionario_required(view_function):
                 request,
                 "Esta área é exclusiva para funcionários aprovados.",
             )
-            return redirect("home")
+            return redirect("meus_emprestimos")
 
-        return view_function(request, *args, **kwargs)
+        return view_function(
+            request,
+            *args,
+            **kwargs,
+        )
 
     return wrapper
 
@@ -50,13 +59,39 @@ def funcionario_required(view_function):
 @login_required(login_url="login")
 def meus_emprestimos(request):
     if request.user.is_superuser:
-        messages.error(
-            request,
-            "O administrador não participa da circulação de livros.",
-        )
-        return redirect("home")
+        return redirect("gestao_dashboard")
 
     expirar_reservas_vencidas()
+
+    consulta = request.GET.get(
+        "q",
+        "",
+    ).strip()
+
+    obras = (
+        Obra.objects
+        .annotate(
+            exemplares_disponiveis=Count(
+                "exemplares",
+                filter=Q(
+                    exemplares__numero__gt=1,
+                    exemplares__somente_consulta=False,
+                    exemplares__status=(
+                        Exemplar.Status.DISPONIVEL
+                    ),
+                ),
+            )
+        )
+        .order_by("titulo")
+    )
+
+    if consulta:
+        obras = obras.filter(
+            Q(titulo__icontains=consulta)
+            | Q(autor__icontains=consulta)
+            | Q(isbn__icontains=consulta)
+            | Q(categoria__icontains=consulta)
+        )
 
     emprestimos_ativos = (
         Emprestimo.objects
@@ -102,9 +137,14 @@ def meus_emprestimos(request):
         request,
         "biblioteca/circulacao/meus_emprestimos.html",
         {
+            "obras": obras,
+            "consulta": consulta,
             "emprestimos_ativos": emprestimos_ativos,
             "historico": historico,
             "reservas": reservas,
+            "eh_funcionario": funcionario_aprovado(
+                request.user
+            ),
         },
     )
 
@@ -136,9 +176,7 @@ def solicitar_livro(request, obra_id):
                 request,
                 (
                     f'Empréstimo de "{obra.titulo}" '
-                    "registrado automaticamente. "
-                    f"Devolução prevista para "
-                    f"{resultado.data_prevista_devolucao:%d/%m/%Y}."
+                    "registrado automaticamente."
                 ),
             )
 
@@ -149,9 +187,8 @@ def solicitar_livro(request, obra_id):
             messages.success(
                 request,
                 (
-                    f'O livro "{obra.titulo}" foi reservado. '
-                    "Um funcionário deverá registrar a retirada "
-                    "dentro de 24 horas."
+                    f'"{obra.titulo}" foi separado para você. '
+                    "O prazo de retirada é de 24 horas."
                 ),
             )
 
@@ -164,9 +201,47 @@ def solicitar_livro(request, obra_id):
                 ),
             )
 
-    return redirect("listar_obras")
+    return redirect("meus_emprestimos")
 
 
+@login_required(login_url="login")
+@require_POST
+def renovar_meu_emprestimo(
+    request,
+    emprestimo_id,
+):
+    emprestimo = get_object_or_404(
+        Emprestimo,
+        id=emprestimo_id,
+        usuario=request.user,
+    )
+
+    try:
+        emprestimo = renovar_emprestimo(
+            usuario=request.user,
+            emprestimo=emprestimo,
+            endereco_ip=obter_endereco_ip(request),
+        )
+
+    except ValidationError as erro:
+        messages.error(
+            request,
+            " ".join(erro.messages),
+        )
+
+    else:
+        messages.success(
+            request,
+            (
+                "Empréstimo renovado até "
+                f"{emprestimo.data_prevista_devolucao:%d/%m/%Y}."
+            ),
+        )
+
+    return redirect("meus_emprestimos")
+
+
+# Mantido para compatibilidade com os testes anteriores.
 @funcionario_required
 def notificacoes_funcionarios(request):
     expirar_reservas_vencidas()
@@ -218,11 +293,6 @@ def marcar_notificacao_lida(
 
     notificacao.lida_por.add(request.user)
 
-    messages.success(
-        request,
-        "Notificação marcada como lida.",
-    )
-
     return redirect("notificacoes_funcionarios")
 
 
@@ -238,7 +308,7 @@ def registrar_retirada(
     )
 
     try:
-        emprestimo = registrar_retirada_reserva(
+        registrar_retirada_reserva(
             funcionario=request.user,
             reserva=reserva,
             endereco_ip=obter_endereco_ip(request),
@@ -248,18 +318,6 @@ def registrar_retirada(
         messages.error(
             request,
             " ".join(erro.messages),
-        )
-
-    else:
-        messages.success(
-            request,
-            (
-                f'Retirada de "{emprestimo.exemplar.obra.titulo}" '
-                f"registrada para "
-                f"{emprestimo.usuario.username}. "
-                f"Devolução prevista para "
-                f"{emprestimo.data_prevista_devolucao:%d/%m/%Y}."
-            ),
         )
 
     return redirect("notificacoes_funcionarios")
