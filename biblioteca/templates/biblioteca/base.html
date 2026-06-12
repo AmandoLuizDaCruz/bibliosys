@@ -1,3 +1,5 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -8,395 +10,118 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>{% block titulo %}BiblioSys{% endblock %}</title>
+    <title>
+        {% block titulo %}BiblioSys{% endblock %}
+    </title>
 
-    <style>
-        * {
-            box-sizing: border-box;
-        }
+    <link
+        rel="stylesheet"
+        href="{% static 'biblioteca/css/app.css' %}"
+    >
 
-        :root {
-            --azul-escuro: #16324f;
-            --azul: #24577a;
-            --azul-claro: #eaf3f8;
-            --fundo: #eef2f6;
-            --texto: #1f2937;
-            --cinza: #64748b;
-            --borda: #d5dde5;
-            --verde: #15803d;
-            --amarelo: #b45309;
-            --vermelho: #b91c1c;
-        }
-
-        body {
-            margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
-            background: var(--fundo);
-            color: var(--texto);
-        }
-
-        header {
-            background: var(--azul-escuro);
-            color: white;
-            padding: 18px 30px;
-        }
-
-        header h1 {
-            margin: 0 0 14px;
-        }
-
-        nav {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 9px;
-        }
-
-        nav a {
-            padding: 9px 14px;
-            color: white;
-            background: var(--azul);
-            border-radius: 6px;
-            text-decoration: none;
-        }
-
-        nav a:hover {
-            background: #33749f;
-        }
-
-        .usuario-logado {
-            margin-left: auto;
-        }
-
-        .link-usuario {
-            display: inline-block;
-            padding: 8px 12px;
-            color: white;
-            background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.45);
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        main {
-            width: calc(100% - 30px);
-            max-width: 1200px;
-            min-height: 500px;
-            margin: 25px auto;
-            padding: 26px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.07);
-        }
-
-        h2,
-        h3 {
-            color: var(--azul-escuro);
-        }
-
-        h2 {
-            margin-top: 0;
-        }
-
-        .mensagem {
-            margin-bottom: 18px;
-            padding: 13px 15px;
-            background: var(--azul-claro);
-            border-left: 5px solid var(--azul);
-            border-radius: 5px;
-        }
-
-        .botao {
-            display: inline-block;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 6px;
-            background: #2563eb;
-            color: white;
-            text-decoration: none;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .botao-secundario {
-            background: var(--cinza);
-        }
-
-        .botao-sucesso {
-            background: var(--verde);
-        }
-
-        .botao-alerta {
-            background: var(--amarelo);
-        }
-
-        .botao-perigo {
-            background: var(--vermelho);
-        }
-
-        .botao-pequeno {
-            padding: 7px 11px;
-            font-size: 13px;
-        }
-
-        .acoes {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 7px;
-            align-items: center;
-        }
-
-        .cabecalho-pagina {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 22px;
-        }
-
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(
-                auto-fit,
-                minmax(210px, 1fr)
-            );
-            gap: 18px;
-            margin: 22px 0;
-        }
-
-        .card {
-            padding: 20px;
-            border: 1px solid var(--borda);
-            border-radius: 9px;
-            background: #f8fafc;
-        }
-
-        .card-numero {
-            margin: 5px 0;
-            font-size: 32px;
-            font-weight: bold;
-            color: var(--azul-escuro);
-        }
-
-        .table-wrap {
-            width: 100%;
-            overflow-x: auto;
-            border: 1px solid var(--borda);
-            border-radius: 8px;
-        }
-
-        table {
-            width: 100%;
-            min-width: 780px;
-            border-collapse: collapse;
-        }
-
-        th {
-            padding: 13px 15px;
-            background: var(--azul-escuro);
-            color: white;
-            text-align: left;
-            white-space: nowrap;
-        }
-
-        td {
-            padding: 13px 15px;
-            border-bottom: 1px solid var(--borda);
-            vertical-align: middle;
-        }
-
-        tbody tr:nth-child(even) {
-            background: #f8fafc;
-        }
-
-        tbody tr:hover {
-            background: var(--azul-claro);
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 5px 9px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .badge-administrador {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-
-        .badge-funcionario {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .badge-leitor {
-            background: #e2e8f0;
-            color: #334155;
-        }
-
-        .badge-pendente {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .badge-recusada {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .busca {
-            display: flex;
-            gap: 8px;
-            width: 100%;
-            margin-bottom: 20px;
-        }
-
-        .busca input {
-            flex: 1;
-        }
-
-        form p {
-            margin-bottom: 17px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: bold;
-        }
-
-        input,
-        select,
-        textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #9ca3af;
-            border-radius: 6px;
-            font-size: 15px;
-        }
-
-        input[type="checkbox"] {
-            width: auto;
-        }
-
-        .vazio {
-            padding: 25px;
-            text-align: center;
-            color: var(--cinza);
-        }
-
-        footer {
-            padding: 20px;
-            text-align: center;
-            color: var(--cinza);
-        }
-
-        @media (max-width: 700px) {
-            header {
-                padding: 16px;
-            }
-
-            main {
-                width: calc(100% - 16px);
-                margin: 10px auto;
-                padding: 18px;
-            }
-
-            .usuario-logado {
-                width: 100%;
-                margin-left: 0;
-            }
-
-            .busca {
-                flex-direction: column;
-            }
-        }
-    </style>
+    {% block estilos %}
+    {% endblock %}
 </head>
 
 <body>
-    <header>
-        <h1>BiblioSys</h1>
+    <header class="app-header">
+        <div class="app-header-inner">
+            <div class="brand-row">
+                <a
+                    class="brand"
+                    href="{% url 'home' %}"
+                >
+                    <span class="brand-mark">
+                        B
+                    </span>
 
-        <nav>
-            {% if user.is_authenticated %}
-                {% if user.is_superuser %}
-                    <a href="{% url 'gestao_dashboard' %}">
-                        Gestão
-                    </a>
+                    <span class="brand-text">
+                        BiblioSys
+                    </span>
+                </a>
+            </div>
 
-                {% elif user.perfil_leitor.funcionario_aprovado %}
-                    <a href="{% url 'cadastrar_livro' %}">
-                        Cadastro de livros
-                    </a>
+            <nav class="nav-shell">
+                {% if user.is_authenticated %}
+                    {% if user.is_superuser %}
+                        <a href="{% url 'gestao_dashboard' %}">
+                            Gestão
+                        </a>
 
-                    <a href="{% url 'meus_emprestimos' %}">
-                        Meus empréstimos
-                    </a>
+                    {% elif user.perfil_leitor.funcionario_aprovado %}
+                        <a href="{% url 'cadastrar_livro' %}">
+                            Cadastro de livros
+                        </a>
 
-                    <a href="{% url 'leitores_busca' %}">
-                        Leitores
+                        <a href="{% url 'meus_emprestimos' %}">
+                            Meus empréstimos
+                        </a>
+
+                        <a href="{% url 'leitores_busca' %}">
+                            Leitores
+                        </a>
+
+                    {% else %}
+                        <a href="{% url 'meus_emprestimos' %}">
+                            Meus empréstimos
+                        </a>
+                    {% endif %}
+
+                    <span class="usuario-logado">
+                        {% if user.is_superuser %}
+                            <a
+                                class="link-usuario"
+                                href="{% url 'gestao_dashboard' %}"
+                            >
+                                {{ user.username }}
+                            </a>
+                        {% else %}
+                            <a
+                                class="link-usuario"
+                                href="{% url 'editar_meu_perfil' %}"
+                            >
+                                {{ user.username }}
+                            </a>
+                        {% endif %}
+                    </span>
+
+                    <a href="{% url 'logout' %}">
+                        Sair
                     </a>
 
                 {% else %}
-                    <a href="{% url 'meus_emprestimos' %}">
-                        Meus empréstimos
+                    <a href="{% url 'login' %}">
+                        Entrar
+                    </a>
+
+                    <a href="{% url 'cadastro' %}">
+                        Criar conta
                     </a>
                 {% endif %}
-
-                <span class="usuario-logado">
-                    {% if user.is_superuser %}
-                        <a
-                            class="link-usuario"
-                            href="{% url 'gestao_dashboard' %}"
-                        >
-                            {{ user.username }}
-                        </a>
-                    {% else %}
-                        <a
-                            class="link-usuario"
-                            href="{% url 'editar_meu_perfil' %}"
-                        >
-                            {{ user.username }}
-                        </a>
-                    {% endif %}
-                </span>
-
-                <a href="{% url 'logout' %}">
-                    Sair
-                </a>
-
-            {% else %}
-                <a href="{% url 'login' %}">
-                    Entrar
-                </a>
-
-                <a href="{% url 'cadastro' %}">
-                    Criar conta
-                </a>
-            {% endif %}
-        </nav>
+            </nav>
+        </div>
     </header>
 
-    <main>
-        {% if messages %}
-            {% for message in messages %}
-                <div class="mensagem">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
+    <main class="content-shell">
+        <div class="page-surface">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="mensagem">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
 
-        {% block conteudo %}
-        {% endblock %}
+            {% block conteudo %}
+            {% endblock %}
+        </div>
     </main>
 
     <footer>
         BiblioSys — Sistema de Gestão de Biblioteca
     </footer>
+
+    {% block scripts %}
+    {% endblock %}
 </body>
 </html>
