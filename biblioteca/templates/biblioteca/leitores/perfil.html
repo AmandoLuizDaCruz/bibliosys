@@ -1,0 +1,302 @@
+{% extends "biblioteca/base.html" %}
+
+{% block titulo %}
+{{ perfil.nome_completo }} | BiblioSys
+{% endblock %}
+
+{% block conteudo %}
+<div class="cabecalho-pagina">
+    <div>
+        <h2>{{ perfil.nome_completo }}</h2>
+
+        <p>
+            Usuário: {{ conta.username }} |
+            CPF: {{ perfil.cpf }} |
+            Telefone: {{ perfil.telefone }}
+        </p>
+    </div>
+
+    <a
+        class="botao botao-secundario"
+        href="{% url 'leitores_busca' %}"
+    >
+        Voltar à pesquisa
+    </a>
+</div>
+
+<h3>Pedidos aguardando atendimento</h3>
+
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Livro</th>
+                <th>Situação</th>
+                <th>Exemplar</th>
+                <th>Prazo</th>
+                <th>Ação</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for reserva in pedidos %}
+                <tr>
+                    <td>{{ reserva.obra.titulo }}</td>
+                    <td>{{ reserva.get_status_display }}</td>
+
+                    <td>
+                        {% if reserva.exemplar %}
+                            {{ reserva.exemplar.numero }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if reserva.expira_em %}
+                            {{ reserva.expira_em|date:"d/m/Y H:i" }}
+                        {% else %}
+                            Posição {{ reserva.posicao_fila }}
+                            na fila
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if reserva.status == "AGUARDANDO_RETIRADA" %}
+                            <form
+                                method="post"
+                                action="{% url 'confirmar_retirada_leitor' conta.id reserva.id %}"
+                                onsubmit="return confirm('Confirmar que o leitor retirou este livro?');"
+                            >
+                                {% csrf_token %}
+
+                                <button
+                                    class="botao botao-sucesso botao-pequeno"
+                                    type="submit"
+                                >
+                                    Registrar retirada
+                                </button>
+                            </form>
+                        {% else %}
+                            Aguardando exemplar
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5" class="vazio">
+                        Nenhum pedido ativo.
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<h3 style="margin-top: 32px;">
+    Empréstimos ativos
+</h3>
+
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Livro</th>
+                <th>Exemplar</th>
+                <th>Devolução prevista</th>
+                <th>Atraso</th>
+                <th>Ação</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for emprestimo in emprestimos_ativos %}
+                <tr>
+                    <td>
+                        {{ emprestimo.exemplar.obra.titulo }}
+                    </td>
+
+                    <td>{{ emprestimo.exemplar.numero }}</td>
+
+                    <td>
+                        {{ emprestimo.data_prevista_devolucao|date:"d/m/Y" }}
+                    </td>
+
+                    <td>
+                        {% if emprestimo.esta_atrasado %}
+                            <span class="badge badge-recusada">
+                                {{ emprestimo.dias_atraso }}
+                                dia(s)
+                            </span>
+                        {% else %}
+                            <span class="badge badge-funcionario">
+                                Em dia
+                            </span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        <form
+                            method="post"
+                            action="{% url 'dar_baixa_emprestimo' conta.id emprestimo.id %}"
+                            onsubmit="return confirm('Registrar a devolução e dar baixa neste livro?');"
+                        >
+                            {% csrf_token %}
+
+                            <button
+                                class="botao botao-alerta botao-pequeno"
+                                type="submit"
+                            >
+                                Dar baixa
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5" class="vazio">
+                        Nenhum empréstimo ativo.
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<h3 style="margin-top: 32px;">Multas</h3>
+
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Livro</th>
+                <th>Dias de atraso</th>
+                <th>Valor</th>
+                <th>Situação</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for multa in multas %}
+                <tr>
+                    <td>
+                        {{ multa.emprestimo.exemplar.obra.titulo }}
+                    </td>
+
+                    <td>{{ multa.dias_atraso }}</td>
+
+                    <td>
+                        R$ {{ multa.valor_total }}
+                    </td>
+
+                    <td>
+                        {{ multa.get_status_display }}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="4" class="vazio">
+                        Nenhuma multa registrada.
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<h3 style="margin-top: 32px;">
+    Histórico de empréstimos
+</h3>
+
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Livro</th>
+                <th>Retirada</th>
+                <th>Devolução</th>
+                <th>Situação</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for emprestimo in historico_emprestimos %}
+                <tr>
+                    <td>
+                        {{ emprestimo.exemplar.obra.titulo }}
+                    </td>
+
+                    <td>
+                        {{ emprestimo.data_emprestimo|date:"d/m/Y H:i" }}
+                    </td>
+
+                    <td>
+                        {% if emprestimo.data_devolucao %}
+                            {{ emprestimo.data_devolucao|date:"d/m/Y H:i" }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {{ emprestimo.get_status_display }}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="4" class="vazio">
+                        Nenhum empréstimo finalizado.
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<h3 style="margin-top: 32px;">
+    Histórico de ações
+</h3>
+
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Responsável</th>
+                <th>Ação</th>
+                <th>Descrição</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for registro in acoes %}
+                <tr>
+                    <td>
+                        {{ registro.criada_em|date:"d/m/Y H:i:s" }}
+                    </td>
+
+                    <td>
+                        {% if registro.usuario %}
+                            {{ registro.usuario.username }}
+                        {% else %}
+                            Sistema
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {{ registro.get_acao_display }}
+                    </td>
+
+                    <td>{{ registro.descricao }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="4" class="vazio">
+                        Nenhuma ação registrada.
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
