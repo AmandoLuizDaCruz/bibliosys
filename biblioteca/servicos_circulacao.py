@@ -1,13 +1,18 @@
+from datetime import timedelta
+
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
 
 from .models import (
+    ConfiguracaoBiblioteca,
     Emprestimo,
     Exemplar,
     Leitor,
+    Multa,
     NotificacaoFuncionario,
     RegistroAuditoria,
+    Renovacao,
     Reserva,
 )
 
@@ -34,17 +39,17 @@ def obter_perfil_ativo(usuario):
 
     if usuario.is_superuser:
         raise ErroCirculacao(
-            "O administrador não pode pegar ou reservar livros."
+            "O administrador não participa da circulação de livros."
         )
 
     try:
         perfil = usuario.perfil_leitor
     except Leitor.DoesNotExist as erro:
         raise ErroCirculacao(
-            "O usuário não possui um perfil de leitor."
+            "O usuário não possui perfil de leitor."
         ) from erro
 
-    if not perfil.ativo:
+    if not perfil.ativo or not usuario.is_active:
         raise ErroCirculacao(
             "Esta conta está inativa."
         )
@@ -84,14 +89,18 @@ def registrar_auditoria(
     descricao,
     objeto_id="",
     endereco_ip=None,
+    dados_anteriores=None,
+    dados_novos=None,
 ):
-    RegistroAuditoria.registrar(
+    return RegistroAuditoria.registrar(
         usuario=usuario,
         acao=acao,
         entidade=entidade,
         objeto_id=objeto_id,
         descricao=descricao,
         endereco_ip=endereco_ip,
+        dados_anteriores=dados_anteriores,
+        dados_novos=dados_novos,
     )
 
 
@@ -110,15 +119,12 @@ def criar_notificacao_reserva(reserva):
             f"{reserva.usuario.username} reservou "
             f'"{reserva.obra.titulo}". '
             f"O exemplar {reserva.exemplar.numero} "
-            "está aguardando retirada."
+            "está separado para retirada."
         )
 
     else:
-        tipo = (
-            NotificacaoFuncionario.Tipo.NOVA_RESERVA
-        )
-
-        titulo = "Nova reserva na fila"
+        tipo = NotificacaoFuncionario.Tipo.NOVA_RESERVA
+        titulo = "Nova entrada na fila"
 
         mensagem = (
             f"{reserva.usuario.username} entrou na fila "
@@ -160,7 +166,7 @@ def reservar_obra_leitor(
 
     if reserva_existente:
         raise ErroCirculacao(
-            "Você já possui uma reserva ativa para este livro."
+            "Você já possui um pedido ativo para este livro."
         )
 
     exemplar = (
@@ -182,6 +188,8 @@ def reservar_obra_leitor(
         status=Reserva.Status.FILA,
     )
 
+    # O livro sai do estoque imediatamente quando existe
+    # exemplar disponível.
     if exemplar:
         reserva.disponibilizar_para_retirada(
             exemplar
@@ -195,7 +203,7 @@ def reservar_obra_leitor(
         entidade="Reserva",
         objeto_id=reserva.id,
         descricao=(
-            f'Reservou o livro "{obra.titulo}". '
+            f'Pediu o livro "{obra.titulo}". '
             f"Situação: {reserva.get_status_display()}."
         ),
         endereco_ip=endereco_ip,
@@ -212,7 +220,7 @@ def emprestar_automaticamente_funcionario(
 ):
     if not funcionario_aprovado(usuario):
         raise ErroCirculacao(
-            "Somente funcionários aprovados usam empréstimo automático."
+            "Somente funcionários aprovados recebem livros automaticamente."
         )
 
     validar_limite_emprestimos(usuario)
@@ -254,11 +262,11 @@ def emprestar_automaticamente_funcionario(
     registrar_auditoria(
         usuario=usuario,
         acao=RegistroAuditoria.Acao.EMPRESTIMO,
-        entidade="Emprestimo",
+        entidade="Empréstimo",
         objeto_id=emprestimo.id,
         descricao=(
-            f'Pegou automaticamente o livro '
-            f'"{obra.titulo}", exemplar {exemplar.numero}.'
+            f'Pegou automaticamente "{obra.titulo}", '
+            f"exemplar {exemplar.numero}."
         ),
         endereco_ip=endereco_ip,
     )
@@ -317,17 +325,17 @@ def registrar_retirada_reserva(
         != Reserva.Status.AGUARDANDO_RETIRADA
     ):
         raise ErroCirculacao(
-            "Esta reserva não está aguardando retirada."
+            "Este pedido não está aguardando retirada."
         )
 
     if reserva.esta_expirada:
         raise ErroCirculacao(
-            "Esta reserva expirou."
+            "O prazo para retirada deste pedido expirou."
         )
 
     if reserva.exemplar is None:
         raise ErroCirculacao(
-            "A reserva não possui exemplar associado."
+            "O pedido não possui exemplar associado."
         )
 
     validar_limite_emprestimos(
@@ -355,10 +363,8 @@ def registrar_retirada_reserva(
         ]
     )
 
-    agora = timezone.now()
-
     reserva.status = Reserva.Status.RETIRADA
-    reserva.finalizada_em = agora
+    reserva.finalizada_em = timezone.now()
 
     reserva.save(
         update_fields=[
@@ -381,12 +387,113 @@ def registrar_retirada_reserva(
     registrar_auditoria(
         usuario=funcionario,
         acao=RegistroAuditoria.Acao.EMPRESTIMO,
-        entidade="Emprestimo",
+        entidade="Empréstimo",
         objeto_id=emprestimo.id,
         descricao=(
-            f"Registrou a retirada de "
-            f'"{reserva.obra.titulo}" para '
-            f"{reserva.usuario.username}."
+            f'Registrou a retirada de "{reserva.obra.titulo}" '
+            f"para {reserva.usuario.username}."
+        ),
+        endereco_ip=endereco_ip,
+    )
+
+    return emprestimo
+
+
+@transaction.atomic
+def renovar_emprestimo(
+    usuario,
+    emprestimo,
+    endereco_ip=None,
+):
+    obter_perfil_ativo(usuario)
+
+    emprestimo = (
+        Emprestimo.objects
+        .select_for_update()
+        .select_related(
+            "usuario",
+            "exemplar",
+            "exemplar__obra",
+        )
+        .get(pk=emprestimo.pk)
+    )
+
+    if emprestimo.usuario_id != usuario.id:
+        raise ErroCirculacao(
+            "Você não pode renovar o empréstimo de outra pessoa."
+        )
+
+    if emprestimo.status != Emprestimo.Status.ATIVO:
+        raise ErroCirculacao(
+            "Este empréstimo não está ativo."
+        )
+
+    if emprestimo.esta_atrasado:
+        raise ErroCirculacao(
+            "Um empréstimo atrasado não pode ser renovado."
+        )
+
+    if emprestimo.quantidade_renovacoes >= 1:
+        raise ErroCirculacao(
+            "Este empréstimo já foi renovado."
+        )
+
+    existe_fila = Reserva.objects.filter(
+        obra=emprestimo.exemplar.obra,
+        status__in=[
+            Reserva.Status.FILA,
+            Reserva.Status.AGUARDANDO_RETIRADA,
+        ],
+    ).exclude(
+        usuario=usuario
+    ).exists()
+
+    if existe_fila:
+        raise ErroCirculacao(
+            (
+                "A renovação não pode ser realizada porque "
+                "existem pessoas aguardando este livro."
+            )
+        )
+
+    configuracao = ConfiguracaoBiblioteca.carregar()
+
+    data_anterior = (
+        emprestimo.data_prevista_devolucao
+    )
+
+    nova_data = (
+        data_anterior
+        + timedelta(
+            days=configuracao.prazo_renovacao_dias
+        )
+    )
+
+    emprestimo.data_prevista_devolucao = nova_data
+    emprestimo.quantidade_renovacoes += 1
+
+    emprestimo.save(
+        update_fields=[
+            "data_prevista_devolucao",
+            "quantidade_renovacoes",
+        ]
+    )
+
+    Renovacao.objects.create(
+        emprestimo=emprestimo,
+        solicitada_por=usuario,
+        data_anterior=data_anterior,
+        nova_data=nova_data,
+    )
+
+    registrar_auditoria(
+        usuario=usuario,
+        acao=RegistroAuditoria.Acao.RENOVACAO,
+        entidade="Empréstimo",
+        objeto_id=emprestimo.id,
+        descricao=(
+            f'Renovou "{emprestimo.exemplar.obra.titulo}" '
+            f"até {nova_data:%d/%m/%Y}."
         ),
         endereco_ip=endereco_ip,
     )
@@ -405,7 +512,10 @@ def promover_proximo_da_fila(
             obra=obra,
             status=Reserva.Status.FILA,
         )
-        .order_by("criada_em")
+        .order_by(
+            "criada_em",
+            "id",
+        )
         .first()
     )
 
@@ -424,9 +534,108 @@ def promover_proximo_da_fila(
 
 
 @transaction.atomic
-def expirar_reserva(
-    reserva,
+def registrar_devolucao(
+    funcionario,
+    emprestimo,
+    endereco_ip=None,
 ):
+    if not funcionario_aprovado(funcionario):
+        raise ErroCirculacao(
+            "Somente funcionários podem dar baixa em livros."
+        )
+
+    emprestimo = (
+        Emprestimo.objects
+        .select_for_update()
+        .select_related(
+            "usuario",
+            "exemplar",
+            "exemplar__obra",
+        )
+        .get(pk=emprestimo.pk)
+    )
+
+    if emprestimo.status != Emprestimo.Status.ATIVO:
+        raise ErroCirculacao(
+            "Este empréstimo já foi finalizado."
+        )
+
+    exemplar = (
+        Exemplar.objects
+        .select_for_update()
+        .get(pk=emprestimo.exemplar.pk)
+    )
+
+    emprestimo.status = Emprestimo.Status.DEVOLVIDO
+    emprestimo.data_devolucao = timezone.now()
+
+    emprestimo.save(
+        update_fields=[
+            "status",
+            "data_devolucao",
+        ]
+    )
+
+    multa = None
+
+    if emprestimo.dias_atraso > 0:
+        multa, _ = Multa.objects.get_or_create(
+            emprestimo=emprestimo,
+            defaults={
+                "registrada_por": funcionario,
+            },
+        )
+
+        multa.registrada_por = funcionario
+        multa.recalcular()
+
+        multa.save(
+            update_fields=[
+                "registrada_por",
+            ]
+        )
+
+    exemplar.status = Exemplar.Status.DISPONIVEL
+
+    exemplar.save(
+        update_fields=[
+            "status",
+            "somente_consulta",
+            "atualizado_em",
+        ]
+    )
+
+    promovida = promover_proximo_da_fila(
+        obra=exemplar.obra,
+        exemplar=exemplar,
+    )
+
+    descricao = (
+        f'Registrou a devolução de '
+        f'"{exemplar.obra.titulo}" por '
+        f"{emprestimo.usuario.username}."
+    )
+
+    if multa:
+        descricao += (
+            f" Atraso de {multa.dias_atraso} dia(s), "
+            f"multa de R$ {multa.valor_total}."
+        )
+
+    registrar_auditoria(
+        usuario=funcionario,
+        acao=RegistroAuditoria.Acao.DEVOLUCAO,
+        entidade="Empréstimo",
+        objeto_id=emprestimo.id,
+        descricao=descricao,
+        endereco_ip=endereco_ip,
+    )
+
+    return emprestimo, multa, promovida
+
+
+@transaction.atomic
+def expirar_reserva(reserva):
     reserva = (
         Reserva.objects
         .select_for_update()
@@ -447,10 +656,9 @@ def expirar_reserva(
         return False
 
     exemplar = reserva.exemplar
-    agora = timezone.now()
 
     reserva.status = Reserva.Status.EXPIRADA
-    reserva.finalizada_em = agora
+    reserva.finalizada_em = timezone.now()
 
     reserva.save(
         update_fields=[
@@ -500,12 +708,10 @@ def expirar_reserva(
 
 
 def expirar_reservas_vencidas():
-    agora = timezone.now()
-
     identificadores = list(
         Reserva.objects.filter(
             status=Reserva.Status.AGUARDANDO_RETIRADA,
-            expira_em__lte=agora,
+            expira_em__lte=timezone.now(),
         ).values_list(
             "id",
             flat=True,
