@@ -506,14 +506,22 @@ def gestao_excluir_usuario(request, usuario_id):
     if request.method == "POST":
         nome_usuario = usuario.username
 
-        if perfil:
-            perfil.delete()
+        filtro_leitores = Q(usuario=usuario)
+
+        if usuario.email:
+            filtro_leitores |= Q(
+                email__iexact=usuario.email
+            )
+
+        Leitor.objects.filter(
+            filtro_leitores
+        ).delete()
 
         usuario.delete()
 
         messages.success(
             request,
-            f'A conta "{nome_usuario}" foi excluída.',
+            f'A conta "{nome_usuario}" foi excluída completamente.',
         )
 
         return redirect("gestao_usuarios")
@@ -526,7 +534,6 @@ def gestao_excluir_usuario(request, usuario_id):
             "perfil": perfil,
         },
     )
-
 
 @administrador_required
 def gestao_solicitacoes(request):

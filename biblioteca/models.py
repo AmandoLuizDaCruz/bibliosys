@@ -27,7 +27,7 @@ class Leitor(models.Model):
 
     usuario = models.OneToOneField(
         settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         null=True,
         blank=True,
         related_name="perfil_leitor",
