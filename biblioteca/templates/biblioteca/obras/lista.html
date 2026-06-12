@@ -5,14 +5,35 @@ Livros | BiblioSys
 {% endblock %}
 
 {% block conteudo %}
-<div class="barra-superior">
-    <h2>Livros cadastrados</h2>
+<div class="cabecalho-pagina">
+    <div>
+        <h2>Livros cadastrados</h2>
 
-    {% if pode_gerenciar_obras %}
-        <a class="botao" href="{% url 'cadastrar_obra' %}">
-            Cadastrar livro
-        </a>
-    {% endif %}
+        <p>
+            O exemplar número 1 de cada livro é exclusivo
+            para consulta dentro da biblioteca.
+        </p>
+    </div>
+
+    <div class="acoes">
+        {% if not user.is_superuser %}
+            <a
+                class="botao botao-secundario"
+                href="{% url 'meus_emprestimos' %}"
+            >
+                Meus empréstimos
+            </a>
+        {% endif %}
+
+        {% if pode_gerenciar_obras %}
+            <a
+                class="botao"
+                href="{% url 'cadastrar_obra' %}"
+            >
+                Cadastrar livro
+            </a>
+        {% endif %}
+    </div>
 </div>
 
 <div class="table-wrap">
@@ -25,10 +46,14 @@ Livros | BiblioSys
                 <th>Editora</th>
                 <th>Ano</th>
                 <th>Categoria</th>
-                <th>Quantidade</th>
+                <th>Exemplares</th>
+
+                {% if not user.is_superuser %}
+                    <th>Empréstimo</th>
+                {% endif %}
 
                 {% if pode_gerenciar_obras %}
-                    <th>Ações</th>
+                    <th>Gerenciar</th>
                 {% endif %}
             </tr>
         </thead>
@@ -44,18 +69,45 @@ Livros | BiblioSys
                     <td>{{ obra.categoria }}</td>
                     <td>{{ obra.quantidade }}</td>
 
+                    {% if not user.is_superuser %}
+                        <td>
+                            <form
+                                method="post"
+                                action="{% url 'solicitar_livro' obra.id %}"
+                            >
+                                {% csrf_token %}
+
+                                {% if user.perfil_leitor.funcionario_aprovado %}
+                                    <button
+                                        class="botao botao-sucesso botao-pequeno"
+                                        type="submit"
+                                    >
+                                        Pegar livro
+                                    </button>
+                                {% else %}
+                                    <button
+                                        class="botao botao-pequeno"
+                                        type="submit"
+                                    >
+                                        Reservar
+                                    </button>
+                                {% endif %}
+                            </form>
+                        </td>
+                    {% endif %}
+
                     {% if pode_gerenciar_obras %}
                         <td>
                             <div class="acoes">
                                 <a
-                                    class="botao editar"
+                                    class="botao botao-alerta botao-pequeno"
                                     href="{% url 'editar_obra' obra.id %}"
                                 >
                                     Editar
                                 </a>
 
                                 <a
-                                    class="botao excluir"
+                                    class="botao botao-perigo botao-pequeno"
                                     href="{% url 'excluir_obra' obra.id %}"
                                 >
                                     Excluir
@@ -66,7 +118,7 @@ Livros | BiblioSys
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan="8">
+                    <td colspan="9" class="vazio">
                         Nenhum livro cadastrado.
                     </td>
                 </tr>

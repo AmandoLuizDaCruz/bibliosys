@@ -8,7 +8,9 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>{% block titulo %}BiblioSys{% endblock %}</title>
+    <title>
+        {% block titulo %}BiblioSys{% endblock %}
+    </title>
 
     <style>
         * {
@@ -66,7 +68,21 @@
 
         .usuario-logado {
             margin-left: auto;
+        }
+
+        .link-usuario {
+            display: inline-block;
+            padding: 8px 12px;
+            color: white;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            border-radius: 6px;
+            text-decoration: none;
             font-weight: bold;
+        }
+
+        .link-usuario:hover {
+            background: rgba(255, 255, 255, 0.12);
         }
 
         main {
@@ -336,6 +352,18 @@
                     Livros
                 </a>
 
+                {% if not user.is_superuser %}
+                    <a href="{% url 'meus_emprestimos' %}">
+                        Meus empréstimos
+                    </a>
+                {% endif %}
+
+                {% if user.perfil_leitor.funcionario_aprovado %}
+                    <a href="{% url 'notificacoes_funcionarios' %}">
+                        Reservas dos leitores
+                    </a>
+                {% endif %}
+
                 {% if user.is_superuser %}
                     <a href="{% url 'gestao_dashboard' %}">
                         Gestão
@@ -351,7 +379,23 @@
                 {% endif %}
 
                 <span class="usuario-logado">
-                    {{ user.username }}
+                    {% if user.is_superuser %}
+                        <a
+                            class="link-usuario"
+                            href="{% url 'gestao_dashboard' %}"
+                            title="Abrir área de gestão"
+                        >
+                            {{ user.username }}
+                        </a>
+                    {% else %}
+                        <a
+                            class="link-usuario"
+                            href="{% url 'editar_meu_perfil' %}"
+                            title="Editar meus dados"
+                        >
+                            {{ user.username }}
+                        </a>
+                    {% endif %}
                 </span>
 
                 <a href="{% url 'logout' %}">

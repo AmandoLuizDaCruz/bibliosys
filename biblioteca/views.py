@@ -506,17 +506,29 @@ def gestao_excluir_usuario(request, usuario_id):
     if request.method == "POST":
         nome_usuario = usuario.username
 
-        filtro_leitores = Q(usuario=usuario)
+        filtros = Q(usuario=usuario)
 
         if usuario.email:
-            filtro_leitores |= Q(
-                email__iexact=usuario.email
+            filtros |= Q(
+                email__iexact=usuario.email.strip()
             )
 
-        Leitor.objects.filter(
-            filtro_leitores
-        ).delete()
+        if perfil:
+            if perfil.email:
+                filtros |= Q(
+                    email__iexact=perfil.email.strip()
+                )
 
+            if perfil.cpf:
+                filtros |= Q(
+                    cpf=perfil.cpf
+                )
+
+        # Remove qualquer perfil relacionado ou registro órfão
+        # que possua o mesmo e-mail ou CPF.
+        Leitor.objects.filter(filtros).delete()
+
+        # Exclui login, solicitações e notificações relacionadas.
         usuario.delete()
 
         messages.success(
@@ -534,6 +546,7 @@ def gestao_excluir_usuario(request, usuario_id):
             "perfil": perfil,
         },
     )
+
 
 @administrador_required
 def gestao_solicitacoes(request):
