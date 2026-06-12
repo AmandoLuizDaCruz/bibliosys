@@ -1,0 +1,211 @@
+{% extends "biblioteca/base.html" %}
+
+{% block titulo %}
+Histórico de ações | BiblioSys
+{% endblock %}
+
+{% block conteudo %}
+<style>
+    .filtros-historico {
+        display: grid;
+        grid-template-columns: minmax(250px, 1fr) 220px auto;
+        gap: 10px;
+        margin-bottom: 22px;
+    }
+
+    .paginacao {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 9px;
+        margin-top: 24px;
+    }
+
+    .pagina-atual {
+        padding: 9px 14px;
+        border: 1px solid var(--borda);
+        border-radius: 6px;
+        background: #f8fafc;
+    }
+
+    .descricao-historico {
+        min-width: 280px;
+        white-space: normal;
+        line-height: 1.45;
+    }
+
+    .ip-historico {
+        white-space: nowrap;
+        font-family: monospace;
+    }
+
+    @media (max-width: 800px) {
+        .filtros-historico {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="cabecalho-pagina">
+    <div>
+        <h2>Histórico de ações</h2>
+
+        <p>
+            Consulte as operações registradas no sistema.
+        </p>
+    </div>
+
+    <a
+        class="botao botao-secundario"
+        href="{% url 'gestao_dashboard' %}"
+    >
+        Voltar à gestão
+    </a>
+</div>
+
+<form
+    class="filtros-historico"
+    method="get"
+>
+    <input
+        type="search"
+        name="q"
+        value="{{ consulta }}"
+        placeholder="Usuário, descrição, entidade ou endereço IP"
+    >
+
+    <select name="acao">
+        <option value="">
+            Todas as ações
+        </option>
+
+        {% for valor, descricao in acoes %}
+            <option
+                value="{{ valor }}"
+                {% if acao_selecionada == valor %}
+                    selected
+                {% endif %}
+            >
+                {{ descricao }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <div class="acoes">
+        <button
+            class="botao"
+            type="submit"
+        >
+            Filtrar
+        </button>
+
+        {% if consulta or acao_selecionada %}
+            <a
+                class="botao botao-secundario"
+                href="{% url 'gestao_historico' %}"
+            >
+                Limpar
+            </a>
+        {% endif %}
+    </div>
+</form>
+
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Data e hora</th>
+                <th>Usuário</th>
+                <th>Ação</th>
+                <th>Entidade</th>
+                <th>Descrição</th>
+                <th>Endereço IP</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for registro in pagina %}
+                <tr>
+                    <td>
+                        {{ registro.criada_em|date:"d/m/Y H:i:s" }}
+                    </td>
+
+                    <td>
+                        {% if registro.usuario %}
+                            {{ registro.usuario.username }}
+                        {% else %}
+                            Sistema
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        <span class="badge badge-administrador">
+                            {{ registro.get_acao_display }}
+                        </span>
+                    </td>
+
+                    <td>
+                        {{ registro.entidade }}
+                    </td>
+
+                    <td class="descricao-historico">
+                        {{ registro.descricao }}
+                    </td>
+
+                    <td class="ip-historico">
+                        {{ registro.endereco_ip|default:"—" }}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="6" class="vazio">
+                        Nenhuma ação encontrada.
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if pagina.paginator.num_pages > 1 %}
+    <div class="paginacao">
+        {% if pagina.has_previous %}
+            <a
+                class="botao botao-secundario botao-pequeno"
+                href="?pagina=1&q={{ consulta|urlencode }}&acao={{ acao_selecionada|urlencode }}"
+            >
+                Primeira
+            </a>
+
+            <a
+                class="botao botao-secundario botao-pequeno"
+                href="?pagina={{ pagina.previous_page_number }}&q={{ consulta|urlencode }}&acao={{ acao_selecionada|urlencode }}"
+            >
+                Anterior
+            </a>
+        {% endif %}
+
+        <span class="pagina-atual">
+            Página {{ pagina.number }}
+            de {{ pagina.paginator.num_pages }}
+        </span>
+
+        {% if pagina.has_next %}
+            <a
+                class="botao botao-secundario botao-pequeno"
+                href="?pagina={{ pagina.next_page_number }}&q={{ consulta|urlencode }}&acao={{ acao_selecionada|urlencode }}"
+            >
+                Próxima
+            </a>
+
+            <a
+                class="botao botao-secundario botao-pequeno"
+                href="?pagina={{ pagina.paginator.num_pages }}&q={{ consulta|urlencode }}&acao={{ acao_selecionada|urlencode }}"
+            >
+                Última
+            </a>
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %}

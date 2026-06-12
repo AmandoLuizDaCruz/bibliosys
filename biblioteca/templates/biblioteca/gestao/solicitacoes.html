@@ -7,11 +7,17 @@ Solicitações | BiblioSys
 {% block conteudo %}
 <div class="cabecalho-pagina">
     <div>
-        <h2>Solicitações de funcionários</h2>
-        <p>Aprove ou recuse pedidos de acesso para gerenciar livros.</p>
+        <h2>Solicitações</h2>
+
+        <p>
+            Aprove ou recuse pedidos de acesso como funcionário.
+        </p>
     </div>
 
-    <a class="botao botao-secundario" href="{% url 'gestao_dashboard' %}">
+    <a
+        class="botao botao-secundario"
+        href="{% url 'gestao_dashboard' %}"
+    >
         Voltar à gestão
     </a>
 </div>
@@ -34,19 +40,31 @@ Solicitações | BiblioSys
             {% for solicitacao in pendentes %}
                 <tr>
                     <td>
-                        {{ solicitacao.usuario.perfil_leitor.nome_completo }}
+                        {% if solicitacao.usuario.perfil_leitor %}
+                            {{ solicitacao.usuario.perfil_leitor.nome_completo }}
+                        {% else %}
+                            {{ solicitacao.usuario.get_full_name|default:"Não informado" }}
+                        {% endif %}
                     </td>
 
-                    <td>{{ solicitacao.usuario.username }}</td>
-                    <td>{{ solicitacao.usuario.email }}</td>
-                    <td>{{ solicitacao.criada_em|date:"d/m/Y H:i" }}</td>
+                    <td>
+                        {{ solicitacao.usuario.username }}
+                    </td>
+
+                    <td>
+                        {{ solicitacao.usuario.email }}
+                    </td>
+
+                    <td>
+                        {{ solicitacao.criada_em|date:"d/m/Y H:i" }}
+                    </td>
 
                     <td>
                         <div class="acoes">
                             <form
                                 method="post"
                                 action="{% url 'gestao_aprovar_solicitacao' solicitacao.id %}"
-                                onsubmit="return confirm('Aprovar este funcionário?');"
+                                onsubmit="return confirm('Aprovar este usuário como funcionário?');"
                             >
                                 {% csrf_token %}
 
@@ -86,7 +104,9 @@ Solicitações | BiblioSys
     </table>
 </div>
 
-<h3 style="margin-top: 30px;">Histórico</h3>
+<h3 style="margin-top: 30px;">
+    Histórico
+</h3>
 
 <div class="table-wrap">
     <table>
@@ -102,11 +122,32 @@ Solicitações | BiblioSys
         <tbody>
             {% for solicitacao in historico %}
                 <tr>
-                    <td>{{ solicitacao.usuario.username }}</td>
-                    <td>{{ solicitacao.get_status_display }}</td>
-                    <td>{{ solicitacao.analisada_em|date:"d/m/Y H:i" }}</td>
                     <td>
-                        {{ solicitacao.analisada_por.username|default:"—" }}
+                        {{ solicitacao.usuario.username }}
+                    </td>
+
+                    <td>
+                        {% if solicitacao.status == "APROVADA" %}
+                            <span class="badge badge-funcionario">
+                                Aprovada
+                            </span>
+                        {% else %}
+                            <span class="badge badge-recusada">
+                                Recusada
+                            </span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {{ solicitacao.analisada_em|date:"d/m/Y H:i" }}
+                    </td>
+
+                    <td>
+                        {% if solicitacao.analisada_por %}
+                            {{ solicitacao.analisada_por.username }}
+                        {% else %}
+                            —
+                        {% endif %}
                     </td>
                 </tr>
             {% empty %}
