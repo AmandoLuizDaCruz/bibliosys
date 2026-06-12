@@ -1,15 +1,51 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>BiblioSys</title>
-</head>
-<body>
-    <h1>BiblioSys</h1>
-    <h2>Sistema de Gestão de Biblioteca</h2>
+{% extends "biblioteca/base.html" %}
 
-    <p>Primeiro módulo funcional do sistema.</p>
+{% block titulo %}
+Início | BiblioSys
+{% endblock %}
 
-    <a href="/obras/">Gerenciar obras</a>
-</body>
-</html>
+{% block conteudo %}
+<h2>Sistema de Gestão de Biblioteca</h2>
+
+<p>
+    Utilize os módulos abaixo para gerenciar as informações do sistema.
+</p>
+
+<div class="cards">
+    <section class="card">
+        <h3>Obras</h3>
+
+        <p>
+            Cadastre, consulte, edite e exclua obras do acervo.
+        </p>
+
+        <a class="botao" href="{% url 'listar_obras' %}">
+            Gerenciar obras
+        </a>
+    </section>
+
+    <section class="card">
+        <h3>Leitores</h3>
+
+        <p>
+            Cadastre, consulte, edite e exclua leitores da biblioteca.
+        </p>
+
+        <a class="botao" href="{% url 'listar_leitores' %}">
+            Gerenciar leitores
+        </a>
+    </section>
+
+    <section class="card">
+        <h3>Administração</h3>
+
+        <p>
+            Acesse o painel administrativo interno do Django.
+        </p>
+
+        <a class="botao secundario" href="/admin/">
+            Abrir administração
+        </a>
+    </section>
+</div>
+{% endblock %}
