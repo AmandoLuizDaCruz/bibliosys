@@ -1,15 +1,15 @@
 {% extends "biblioteca/base.html" %}
 
 {% block titulo %}
-Excluir obra | BiblioSys
+Excluir leitor | BiblioSys
 {% endblock %}
 
 {% block conteudo %}
-<h2>Excluir obra</h2>
+<h2>Excluir leitor</h2>
 
 <p>
-    Confirma a exclusão da obra
-    <strong>{{ obra.titulo }}</strong>?
+    Confirma a exclusão do leitor
+    <strong>{{ leitor.nome_completo }}</strong>?
 </p>
 
 <form method="post">
@@ -20,7 +20,7 @@ Excluir obra | BiblioSys
             Confirmar exclusão
         </button>
 
-        <a class="botao secundario" href="{% url 'listar_obras' %}">
+        <a class="botao secundario" href="{% url 'listar_leitores' %}">
             Cancelar
         </a>
     </div>
