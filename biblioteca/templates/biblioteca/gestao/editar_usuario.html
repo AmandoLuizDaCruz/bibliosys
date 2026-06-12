@@ -1,0 +1,243 @@
+{% extends "biblioteca/base.html" %}
+{% load static %}
+
+{% block titulo %}
+Editar perfil | BiblioSys
+{% endblock %}
+
+{% block conteudo %}
+<style>
+    .formulario-perfil {
+        max-width: 900px;
+    }
+
+    .secao-formulario {
+        margin-bottom: 24px;
+        padding: 20px;
+        border: 1px solid var(--borda);
+        border-radius: 8px;
+        background: #f8fafc;
+    }
+
+    .secao-formulario h3 {
+        margin-top: 0;
+    }
+
+    .grade-formulario {
+        display: grid;
+        grid-template-columns: repeat(
+            2,
+            minmax(0, 1fr)
+        );
+        gap: 18px;
+    }
+
+    .campo-completo {
+        grid-column: 1 / -1;
+    }
+
+    .erro-campo {
+        margin: 5px 0 0;
+        color: var(--vermelho);
+        font-size: 13px;
+    }
+
+    .ajuda-campo {
+        margin: 5px 0 0;
+        color: var(--cinza);
+        font-size: 13px;
+    }
+
+    @media (max-width: 700px) {
+        .grade-formulario {
+            grid-template-columns: 1fr;
+        }
+
+        .campo-completo {
+            grid-column: auto;
+        }
+    }
+</style>
+
+<div class="cabecalho-pagina">
+    <div>
+        <h2>Editar perfil</h2>
+
+        <p>
+            Alterando a conta
+            <strong>{{ conta.username }}</strong>.
+        </p>
+    </div>
+
+    <a
+        class="botao botao-secundario"
+        href="{% url 'gestao_usuarios' %}"
+    >
+        Voltar às contas
+    </a>
+</div>
+
+<form
+    method="post"
+    class="formulario-perfil"
+    novalidate
+>
+    {% csrf_token %}
+
+    {% if formulario.non_field_errors %}
+        <div class="mensagem">
+            {{ formulario.non_field_errors }}
+        </div>
+    {% endif %}
+
+    <section class="secao-formulario">
+        <h3>Dados de acesso</h3>
+
+        <div class="grade-formulario">
+            <div>
+                {{ formulario.username.label_tag }}
+                {{ formulario.username }}
+
+                {% for erro in formulario.username.errors %}
+                    <p class="erro-campo">{{ erro }}</p>
+                {% endfor %}
+            </div>
+
+            <div>
+                {{ formulario.email.label_tag }}
+                {{ formulario.email }}
+
+                {% for erro in formulario.email.errors %}
+                    <p class="erro-campo">{{ erro }}</p>
+                {% endfor %}
+            </div>
+
+            <div>
+                {{ formulario.nova_senha.label_tag }}
+                {{ formulario.nova_senha }}
+
+                <p class="ajuda-campo">
+                    Deixe em branco para manter a senha.
+                </p>
+
+                {% for erro in formulario.nova_senha.errors %}
+                    <p class="erro-campo">{{ erro }}</p>
+                {% endfor %}
+            </div>
+
+            <div>
+                {{ formulario.confirmar_senha.label_tag }}
+                {{ formulario.confirmar_senha }}
+
+                {% for erro in formulario.confirmar_senha.errors %}
+                    <p class="erro-campo">{{ erro }}</p>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <section class="secao-formulario">
+        <h3>Dados pessoais</h3>
+
+        <div class="grade-formulario">
+            <div>
+                {{ formulario.first_name.label_tag }}
+                {{ formulario.first_name }}
+
+                {% for erro in formulario.first_name.errors %}
+                    <p class="erro-campo">{{ erro }}</p>
+                {% endfor %}
+            </div>
+
+            <div>
+                {{ formulario.last_name.label_tag }}
+                {{ formulario.last_name }}
+
+                {% for erro in formulario.last_name.errors %}
+                    <p class="erro-campo">{{ erro }}</p>
+                {% endfor %}
+            </div>
+
+            <div>
+                {{ formulario.cpf.label_tag }}
+                {{ formulario.cpf }}
+
+                {% for erro in formulario.cpf.errors %}
+                    <p class="erro-campo">{{ erro }}</p>
+                {% endfor %}
+            </div>
+
+            <div>
+                {{ formulario.telefone.label_tag }}
+                {{ formulario.telefone }}
+
+                {% for erro in formulario.telefone.errors %}
+                    <p class="erro-campo">{{ erro }}</p>
+                {% endfor %}
+            </div>
+
+            <div class="campo-completo">
+                {{ formulario.endereco.label_tag }}
+                {{ formulario.endereco }}
+
+                {% for erro in formulario.endereco.errors %}
+                    <p class="erro-campo">{{ erro }}</p>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <section class="secao-formulario">
+        <h3>Permissões e situação</h3>
+
+        <div class="grade-formulario">
+            <div>
+                {{ formulario.nivel_acesso.label_tag }}
+                {{ formulario.nivel_acesso }}
+
+                {% for erro in formulario.nivel_acesso.errors %}
+                    <p class="erro-campo">{{ erro }}</p>
+                {% endfor %}
+            </div>
+
+            <div>
+                {{ formulario.tipo_vinculo.label_tag }}
+                {{ formulario.tipo_vinculo }}
+
+                {% for erro in formulario.tipo_vinculo.errors %}
+                    <p class="erro-campo">{{ erro }}</p>
+                {% endfor %}
+            </div>
+
+            <div class="campo-completo">
+                <label>
+                    {{ formulario.ativo }}
+                    Conta ativa
+                </label>
+
+                {% for erro in formulario.ativo.errors %}
+                    <p class="erro-campo">{{ erro }}</p>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <div class="acoes">
+        <button
+            class="botao botao-sucesso"
+            type="submit"
+        >
+            Salvar alterações
+        </button>
+
+        <a
+            class="botao botao-secundario"
+            href="{% url 'gestao_usuarios' %}"
+        >
+            Cancelar
+        </a>
+    </div>
+</form>
+
+<script src="{% static 'biblioteca/js/mascaras.js' %}"></script>
+{% endblock %}

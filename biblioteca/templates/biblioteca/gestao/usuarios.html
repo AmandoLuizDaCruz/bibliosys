@@ -8,10 +8,16 @@ Contas | BiblioSys
 <div class="cabecalho-pagina">
     <div>
         <h2>Contas cadastradas</h2>
-        <p>Consulte e remova contas do sistema.</p>
+
+        <p>
+            Consulte, edite ou exclua contas do sistema.
+        </p>
     </div>
 
-    <a class="botao botao-secundario" href="{% url 'gestao_dashboard' %}">
+    <a
+        class="botao botao-secundario"
+        href="{% url 'gestao_dashboard' %}"
+    >
         Voltar à gestão
     </a>
 </div>
@@ -29,7 +35,10 @@ Contas | BiblioSys
     </button>
 
     {% if consulta %}
-        <a class="botao botao-secundario" href="{% url 'gestao_usuarios' %}">
+        <a
+            class="botao botao-secundario"
+            href="{% url 'gestao_usuarios' %}"
+        >
             Limpar
         </a>
     {% endif %}
@@ -45,7 +54,7 @@ Contas | BiblioSys
                 <th>CPF</th>
                 <th>Perfil</th>
                 <th>Status</th>
-                <th>Ação</th>
+                <th>Ações</th>
             </tr>
         </thead>
 
@@ -55,15 +64,23 @@ Contas | BiblioSys
                     <td>
                         {% if item.perfil %}
                             {{ item.perfil.nome_completo }}
+                        {% elif item.usuario.get_full_name %}
+                            {{ item.usuario.get_full_name }}
                         {% else %}
-                            {{ item.usuario.get_full_name|default:"Não informado" }}
+                            Não informado
                         {% endif %}
                     </td>
 
-                    <td>{{ item.usuario.username }}</td>
+                    <td>
+                        {{ item.usuario.username }}
+                    </td>
 
                     <td>
-                        {{ item.usuario.email|default:"Não informado" }}
+                        {% if item.usuario.email %}
+                            {{ item.usuario.email }}
+                        {% else %}
+                            Não informado
+                        {% endif %}
                     </td>
 
                     <td>
@@ -75,31 +92,46 @@ Contas | BiblioSys
                     </td>
 
                     <td>
-                        <span class="badge badge-{{ item.classe_nivel }}">
+                        <span
+                            class="badge badge-{{ item.classe_nivel }}"
+                        >
                             {{ item.nivel }}
                         </span>
                     </td>
 
                     <td>
                         {% if item.usuario.is_active %}
-                            Ativa
+                            <span class="badge badge-funcionario">
+                                Ativa
+                            </span>
                         {% else %}
-                            Inativa
+                            <span class="badge badge-recusada">
+                                Inativa
+                            </span>
                         {% endif %}
                     </td>
 
                     <td>
                         {% if item.usuario.username|lower == "admin" %}
                             <span class="badge badge-administrador">
-                                Protegida
+                                Conta protegida
                             </span>
                         {% else %}
-                            <a
-                                class="botao botao-perigo botao-pequeno"
-                                href="{% url 'gestao_excluir_usuario' item.usuario.id %}"
-                            >
-                                Excluir
-                            </a>
+                            <div class="acoes">
+                                <a
+                                    class="botao botao-alerta botao-pequeno"
+                                    href="{% url 'gestao_editar_usuario' item.usuario.id %}"
+                                >
+                                    Editar
+                                </a>
+
+                                <a
+                                    class="botao botao-perigo botao-pequeno"
+                                    href="{% url 'gestao_excluir_usuario' item.usuario.id %}"
+                                >
+                                    Excluir
+                                </a>
+                            </div>
                         {% endif %}
                     </td>
                 </tr>
