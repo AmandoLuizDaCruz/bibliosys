@@ -12,3 +12,26 @@ class Obra(models.Model):
 
     def __str__(self):
         return self.titulo
+
+
+class Leitor(models.Model):
+    TIPOS_VINCULO = [
+        ("ALUNO", "Aluno"),
+        ("PROFESSOR", "Professor"),
+        ("FUNCIONARIO", "Funcionário"),
+        ("EXTERNO", "Público externo"),
+    ]
+
+    nome_completo = models.CharField(max_length=200)
+    cpf = models.CharField(max_length=14, unique=True)
+    email = models.EmailField(unique=True)
+    telefone = models.CharField(max_length=20)
+    endereco = models.CharField(max_length=255)
+    tipo_vinculo = models.CharField(
+        max_length=20,
+        choices=TIPOS_VINCULO,
+    )
+    ativo = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.nome_completo

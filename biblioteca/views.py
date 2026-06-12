@@ -1,12 +1,14 @@
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .forms import ObraForm
-from .models import Obra
+from .forms import LeitorForm, ObraForm
+from .models import Leitor, Obra
 
 
 def home(request):
     return render(request, "biblioteca/home.html")
 
+
+# CRUD DE OBRAS
 
 def listar_obras(request):
     obras = Obra.objects.all().order_by("titulo")
@@ -71,4 +73,72 @@ def excluir_obra(request, obra_id):
         request,
         "biblioteca/obras/excluir.html",
         {"obra": obra},
+    )
+
+
+# CRUD DE LEITORES
+
+def listar_leitores(request):
+    leitores = Leitor.objects.all().order_by("nome_completo")
+
+    return render(
+        request,
+        "biblioteca/leitores/lista.html",
+        {"leitores": leitores},
+    )
+
+
+def cadastrar_leitor(request):
+    if request.method == "POST":
+        formulario = LeitorForm(request.POST)
+
+        if formulario.is_valid():
+            formulario.save()
+            return redirect("listar_leitores")
+    else:
+        formulario = LeitorForm()
+
+    return render(
+        request,
+        "biblioteca/leitores/formulario.html",
+        {
+            "formulario": formulario,
+            "titulo": "Cadastrar leitor",
+        },
+    )
+
+
+def editar_leitor(request, leitor_id):
+    leitor = get_object_or_404(Leitor, id=leitor_id)
+
+    if request.method == "POST":
+        formulario = LeitorForm(request.POST, instance=leitor)
+
+        if formulario.is_valid():
+            formulario.save()
+            return redirect("listar_leitores")
+    else:
+        formulario = LeitorForm(instance=leitor)
+
+    return render(
+        request,
+        "biblioteca/leitores/formulario.html",
+        {
+            "formulario": formulario,
+            "titulo": "Editar leitor",
+        },
+    )
+
+
+def excluir_leitor(request, leitor_id):
+    leitor = get_object_or_404(Leitor, id=leitor_id)
+
+    if request.method == "POST":
+        leitor.delete()
+        return redirect("listar_leitores")
+
+    return render(
+        request,
+        "biblioteca/leitores/excluir.html",
+        {"leitor": leitor},
     )

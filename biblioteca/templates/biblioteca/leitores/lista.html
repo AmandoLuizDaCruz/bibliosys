@@ -1,15 +1,15 @@
 {% extends "biblioteca/base.html" %}
 
 {% block titulo %}
-Obras | BiblioSys
+Leitores | BiblioSys
 {% endblock %}
 
 {% block conteudo %}
-<h2>Obras cadastradas</h2>
+<h2>Leitores cadastrados</h2>
 
 <div class="acoes">
-    <a class="botao" href="{% url 'cadastrar_obra' %}">
-        Cadastrar nova obra
+    <a class="botao" href="{% url 'cadastrar_leitor' %}">
+        Cadastrar novo leitor
     </a>
 </div>
 
@@ -17,36 +17,43 @@ Obras | BiblioSys
     <table>
         <thead>
             <tr>
-                <th>Título</th>
-                <th>Autor</th>
-                <th>ISBN</th>
-                <th>Categoria</th>
-                <th>Quantidade</th>
+                <th>Nome</th>
+                <th>CPF</th>
+                <th>E-mail</th>
+                <th>Vínculo</th>
+                <th>Ativo</th>
                 <th>Ações</th>
             </tr>
         </thead>
 
         <tbody>
-            {% for obra in obras %}
+            {% for leitor in leitores %}
                 <tr>
-                    <td>{{ obra.titulo }}</td>
-                    <td>{{ obra.autor }}</td>
-                    <td>{{ obra.isbn }}</td>
-                    <td>{{ obra.categoria }}</td>
-                    <td>{{ obra.quantidade }}</td>
+                    <td>{{ leitor.nome_completo }}</td>
+                    <td>{{ leitor.cpf }}</td>
+                    <td>{{ leitor.email }}</td>
+                    <td>{{ leitor.get_tipo_vinculo_display }}</td>
+
+                    <td>
+                        {% if leitor.ativo %}
+                            Sim
+                        {% else %}
+                            Não
+                        {% endif %}
+                    </td>
 
                     <td>
                         <div class="acoes">
                             <a
                                 class="botao editar"
-                                href="{% url 'editar_obra' obra.id %}"
+                                href="{% url 'editar_leitor' leitor.id %}"
                             >
                                 Editar
                             </a>
 
                             <a
                                 class="botao excluir"
-                                href="{% url 'excluir_obra' obra.id %}"
+                                href="{% url 'excluir_leitor' leitor.id %}"
                             >
                                 Excluir
                             </a>
@@ -56,7 +63,7 @@ Obras | BiblioSys
             {% empty %}
                 <tr>
                     <td colspan="6">
-                        Nenhuma obra cadastrada.
+                        Nenhum leitor cadastrado.
                     </td>
                 </tr>
             {% endfor %}
