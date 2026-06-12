@@ -2,7 +2,11 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>{% block titulo %}BiblioSys{% endblock %}</title>
 
@@ -11,63 +15,94 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --azul-escuro: #16324f;
+            --azul: #24577a;
+            --azul-claro: #eaf3f8;
+            --fundo: #eef2f6;
+            --texto: #1f2937;
+            --cinza: #64748b;
+            --borda: #d5dde5;
+            --verde: #15803d;
+            --amarelo: #b45309;
+            --vermelho: #b91c1c;
+        }
+
         body {
             margin: 0;
             font-family: Arial, Helvetica, sans-serif;
-            background-color: #f3f4f6;
-            color: #1f2937;
+            background: var(--fundo);
+            color: var(--texto);
         }
 
         header {
-            background-color: #16324f;
+            background: var(--azul-escuro);
             color: white;
-            padding: 20px 30px;
+            padding: 18px 30px;
         }
 
         header h1 {
-            margin: 0 0 15px;
+            margin: 0 0 14px;
         }
 
         nav {
             display: flex;
+            align-items: center;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 9px;
         }
 
         nav a {
-            color: white;
-            text-decoration: none;
             padding: 9px 14px;
-            border-radius: 5px;
-            background-color: #244f73;
+            color: white;
+            background: var(--azul);
+            border-radius: 6px;
+            text-decoration: none;
         }
 
         nav a:hover {
-            background-color: #326b99;
+            background: #33749f;
+        }
+
+        .usuario-logado {
+            margin-left: auto;
+            font-weight: bold;
         }
 
         main {
-            max-width: 1100px;
-            margin: 30px auto;
-            padding: 25px;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            width: calc(100% - 30px);
+            max-width: 1200px;
+            min-height: 500px;
+            margin: 25px auto;
+            padding: 26px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.07);
         }
 
-        .acoes {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin: 20px 0;
+        h2 {
+            margin-top: 0;
+            color: var(--azul-escuro);
+        }
+
+        h3 {
+            color: var(--azul-escuro);
+        }
+
+        .mensagem {
+            margin-bottom: 18px;
+            padding: 13px 15px;
+            background: var(--azul-claro);
+            border-left: 5px solid var(--azul);
+            border-radius: 5px;
         }
 
         .botao {
             display: inline-block;
+            padding: 10px 15px;
             border: none;
-            border-radius: 5px;
-            padding: 10px 16px;
-            background-color: #2563eb;
+            border-radius: 6px;
+            background: #2563eb;
             color: white;
             text-decoration: none;
             cursor: pointer;
@@ -75,62 +110,158 @@
         }
 
         .botao:hover {
-            opacity: 0.9;
+            opacity: 0.88;
         }
 
-        .editar {
-            background-color: #d97706;
+        .botao-secundario {
+            background: var(--cinza);
         }
 
-        .excluir {
-            background-color: #dc2626;
+        .botao-sucesso {
+            background: var(--verde);
         }
 
-        .secundario {
-            background-color: #64748b;
+        .botao-alerta {
+            background: var(--amarelo);
+        }
+
+        .botao-perigo {
+            background: var(--vermelho);
+        }
+
+        .botao-pequeno {
+            padding: 7px 11px;
+            font-size: 13px;
+        }
+
+        .acoes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            align-items: center;
+        }
+
+        .cabecalho-pagina {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 22px;
         }
 
         .cards {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-            gap: 20px;
-            margin-top: 25px;
+            grid-template-columns: repeat(
+                auto-fit,
+                minmax(210px, 1fr)
+            );
+            gap: 18px;
+            margin: 22px 0;
         }
 
         .card {
             padding: 20px;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            background-color: #f9fafb;
+            border: 1px solid var(--borda);
+            border-radius: 9px;
+            background: #f8fafc;
         }
 
-        .card h3 {
-            margin-top: 0;
+        .card-numero {
+            margin: 5px 0;
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--azul-escuro);
         }
 
         .table-wrap {
+            width: 100%;
             overflow-x: auto;
+            border: 1px solid var(--borda);
+            border-radius: 8px;
         }
 
         table {
             width: 100%;
+            min-width: 780px;
             border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        th,
-        td {
-            padding: 12px;
-            border-bottom: 1px solid #d1d5db;
-            text-align: left;
         }
 
         th {
-            background-color: #e5e7eb;
+            padding: 13px 15px;
+            background: var(--azul-escuro);
+            color: white;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 13px 15px;
+            border-bottom: 1px solid var(--borda);
+            vertical-align: middle;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #f8fafc;
+        }
+
+        tbody tr:hover {
+            background: var(--azul-claro);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .badge-administrador {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-funcionario {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-leitor {
+            background: #e2e8f0;
+            color: #334155;
+        }
+
+        .badge-pendente {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-recusada {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .busca {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+            max-width: 620px;
+            margin-bottom: 20px;
+        }
+
+        .busca input {
+            flex: 1;
         }
 
         form p {
-            margin-bottom: 18px;
+            margin-bottom: 17px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: bold;
         }
 
         input,
@@ -139,18 +270,54 @@
             width: 100%;
             padding: 10px;
             border: 1px solid #9ca3af;
-            border-radius: 5px;
-            margin-top: 5px;
+            border-radius: 6px;
+            font-size: 15px;
         }
 
         input[type="checkbox"] {
             width: auto;
         }
 
-        footer {
+        .caixa-confirmacao {
+            max-width: 650px;
+            padding: 22px;
+            border: 1px solid #fecaca;
+            border-left: 6px solid var(--vermelho);
+            border-radius: 8px;
+            background: #fff7f7;
+        }
+
+        .vazio {
+            padding: 25px;
             text-align: center;
+            color: var(--cinza);
+        }
+
+        footer {
             padding: 20px;
-            color: #64748b;
+            text-align: center;
+            color: var(--cinza);
+        }
+
+        @media (max-width: 700px) {
+            header {
+                padding: 16px;
+            }
+
+            main {
+                width: calc(100% - 16px);
+                margin: 10px auto;
+                padding: 18px;
+            }
+
+            .usuario-logado {
+                width: 100%;
+                margin-left: 0;
+            }
+
+            .busca {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
@@ -160,14 +327,57 @@
         <h1>BiblioSys</h1>
 
         <nav>
-            <a href="{% url 'home' %}">Início</a>
-            <a href="{% url 'listar_obras' %}">Obras</a>
-            <a href="{% url 'listar_leitores' %}">Leitores</a>
-            <a href="/admin/">Administração</a>
+            <a href="{% url 'home' %}">
+                Início
+            </a>
+
+            {% if user.is_authenticated %}
+                <a href="{% url 'listar_obras' %}">
+                    Livros
+                </a>
+
+                {% if user.is_superuser %}
+                    <a href="{% url 'gestao_dashboard' %}">
+                        Gestão
+                    </a>
+
+                    <a href="{% url 'gestao_usuarios' %}">
+                        Contas
+                    </a>
+
+                    <a href="{% url 'gestao_solicitacoes' %}">
+                        Solicitações
+                    </a>
+                {% endif %}
+
+                <span class="usuario-logado">
+                    {{ user.username }}
+                </span>
+
+                <a href="{% url 'logout' %}">
+                    Sair
+                </a>
+            {% else %}
+                <a href="{% url 'login' %}">
+                    Entrar
+                </a>
+
+                <a href="{% url 'cadastro' %}">
+                    Criar conta
+                </a>
+            {% endif %}
         </nav>
     </header>
 
     <main>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mensagem">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
         {% block conteudo %}
         {% endblock %}
     </main>

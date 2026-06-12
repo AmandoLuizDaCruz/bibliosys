@@ -1,0 +1,122 @@
+{% extends "biblioteca/base.html" %}
+
+{% block titulo %}
+Solicitações | BiblioSys
+{% endblock %}
+
+{% block conteudo %}
+<div class="cabecalho-pagina">
+    <div>
+        <h2>Solicitações de funcionários</h2>
+        <p>Aprove ou recuse pedidos de acesso para gerenciar livros.</p>
+    </div>
+
+    <a class="botao botao-secundario" href="{% url 'gestao_dashboard' %}">
+        Voltar à gestão
+    </a>
+</div>
+
+<h3>Pendentes</h3>
+
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Usuário</th>
+                <th>E-mail</th>
+                <th>Data</th>
+                <th>Decisão</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for solicitacao in pendentes %}
+                <tr>
+                    <td>
+                        {{ solicitacao.usuario.perfil_leitor.nome_completo }}
+                    </td>
+
+                    <td>{{ solicitacao.usuario.username }}</td>
+                    <td>{{ solicitacao.usuario.email }}</td>
+                    <td>{{ solicitacao.criada_em|date:"d/m/Y H:i" }}</td>
+
+                    <td>
+                        <div class="acoes">
+                            <form
+                                method="post"
+                                action="{% url 'gestao_aprovar_solicitacao' solicitacao.id %}"
+                                onsubmit="return confirm('Aprovar este funcionário?');"
+                            >
+                                {% csrf_token %}
+
+                                <button
+                                    class="botao botao-sucesso botao-pequeno"
+                                    type="submit"
+                                >
+                                    Aprovar
+                                </button>
+                            </form>
+
+                            <form
+                                method="post"
+                                action="{% url 'gestao_recusar_solicitacao' solicitacao.id %}"
+                                onsubmit="return confirm('Recusar esta solicitação?');"
+                            >
+                                {% csrf_token %}
+
+                                <button
+                                    class="botao botao-perigo botao-pequeno"
+                                    type="submit"
+                                >
+                                    Recusar
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5" class="vazio">
+                        Nenhuma solicitação pendente.
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<h3 style="margin-top: 30px;">Histórico</h3>
+
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Usuário</th>
+                <th>Resultado</th>
+                <th>Analisada em</th>
+                <th>Analisada por</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for solicitacao in historico %}
+                <tr>
+                    <td>{{ solicitacao.usuario.username }}</td>
+                    <td>{{ solicitacao.get_status_display }}</td>
+                    <td>{{ solicitacao.analisada_em|date:"d/m/Y H:i" }}</td>
+                    <td>
+                        {{ solicitacao.analisada_por.username|default:"—" }}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="4" class="vazio">
+                        Nenhuma solicitação analisada.
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

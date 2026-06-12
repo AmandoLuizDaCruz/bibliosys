@@ -2,19 +2,19 @@
 {% load static %}
 
 {% block titulo %}
-{{ titulo }} | BiblioSys
+Criar conta | BiblioSys
 {% endblock %}
 
 {% block conteudo %}
 <div class="cabecalho-pagina">
-    <h2>{{ titulo }}</h2>
+    <div>
+        <h2>Criar conta</h2>
 
-    <a
-        class="botao botao-secundario"
-        href="{% url 'listar_leitores' %}"
-    >
-        Voltar
-    </a>
+        <p>
+            Contas de funcionário precisam ser aprovadas
+            pelo administrador.
+        </p>
+    </div>
 </div>
 
 <form method="post" novalidate>
@@ -24,14 +24,14 @@
 
     <div class="acoes">
         <button class="botao" type="submit">
-            Salvar
+            Criar conta
         </button>
 
         <a
             class="botao botao-secundario"
-            href="{% url 'listar_leitores' %}"
+            href="{% url 'login' %}"
         >
-            Cancelar
+            Voltar ao login
         </a>
     </div>
 </form>

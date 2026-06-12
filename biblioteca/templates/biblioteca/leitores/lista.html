@@ -1,15 +1,15 @@
 {% extends "biblioteca/base.html" %}
 
 {% block titulo %}
-Leitores | BiblioSys
+Usuários | BiblioSys
 {% endblock %}
 
 {% block conteudo %}
-<h2>Leitores cadastrados</h2>
+<div class="barra-superior">
+    <h2>Usuários cadastrados</h2>
 
-<div class="acoes">
     <a class="botao" href="{% url 'cadastrar_leitor' %}">
-        Cadastrar novo leitor
+        Cadastrar usuário
     </a>
 </div>
 
@@ -18,10 +18,12 @@ Leitores | BiblioSys
         <thead>
             <tr>
                 <th>Nome</th>
+                <th>Usuário</th>
                 <th>CPF</th>
                 <th>E-mail</th>
+                <th>Telefone</th>
                 <th>Vínculo</th>
-                <th>Ativo</th>
+                <th>Status</th>
                 <th>Ações</th>
             </tr>
         </thead>
@@ -30,15 +32,25 @@ Leitores | BiblioSys
             {% for leitor in leitores %}
                 <tr>
                     <td>{{ leitor.nome_completo }}</td>
+
+                    <td>
+                        {% if leitor.usuario %}
+                            {{ leitor.usuario.username }}
+                        {% else %}
+                            Sem conta
+                        {% endif %}
+                    </td>
+
                     <td>{{ leitor.cpf }}</td>
                     <td>{{ leitor.email }}</td>
+                    <td>{{ leitor.telefone }}</td>
                     <td>{{ leitor.get_tipo_vinculo_display }}</td>
 
                     <td>
                         {% if leitor.ativo %}
-                            Sim
+                            Ativo
                         {% else %}
-                            Não
+                            Inativo
                         {% endif %}
                     </td>
 
@@ -62,8 +74,8 @@ Leitores | BiblioSys
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan="6">
-                        Nenhum leitor cadastrado.
+                    <td colspan="8">
+                        Nenhum usuário cadastrado.
                     </td>
                 </tr>
             {% endfor %}

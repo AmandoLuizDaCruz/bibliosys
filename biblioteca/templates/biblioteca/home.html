@@ -7,45 +7,56 @@ Início | BiblioSys
 {% block conteudo %}
 <h2>Sistema de Gestão de Biblioteca</h2>
 
-<p>
-    Utilize os módulos abaixo para gerenciar as informações do sistema.
-</p>
+{% if not user.is_authenticated %}
+    <p>
+        Entre no sistema ou crie uma conta para continuar.
+    </p>
 
-<div class="cards">
-    <section class="card">
-        <h3>Obras</h3>
+    <a class="botao" href="{% url 'login' %}">
+        Entrar
+    </a>
 
+    <a class="botao" href="{% url 'cadastro' %}">
+        Criar conta
+    </a>
+{% else %}
+    <p>
+        Bem-vindo, {{ user.first_name|default:user.username }}.
+    </p>
+
+    {% if user.is_superuser %}
         <p>
-            Cadastre, consulte, edite e exclua obras do acervo.
+            Você está conectado como administrador master.
         </p>
 
-        <a class="botao" href="{% url 'listar_obras' %}">
-            Gerenciar obras
+        <a class="botao" href="/admin/">
+            Abrir área administrativa
         </a>
-    </section>
-
-    <section class="card">
-        <h3>Leitores</h3>
-
+    {% elif solicitacao %}
+        {% if solicitacao.status == "PENDENTE" %}
+            <p>
+                Sua solicitação de funcionário está aguardando aprovação.
+                Enquanto isso, sua conta possui acesso de leitor.
+            </p>
+        {% elif solicitacao.status == "APROVADA" %}
+            <p>
+                Sua conta de funcionário foi aprovada.
+                Você pode gerenciar os livros.
+            </p>
+        {% else %}
+            <p>
+                Sua solicitação de funcionário foi recusada.
+                Sua conta continua como leitor.
+            </p>
+        {% endif %}
+    {% else %}
         <p>
-            Cadastre, consulte, edite e exclua leitores da biblioteca.
+            Sua conta possui perfil de leitor.
         </p>
+    {% endif %}
 
-        <a class="botao" href="{% url 'listar_leitores' %}">
-            Gerenciar leitores
-        </a>
-    </section>
-
-    <section class="card">
-        <h3>Administração</h3>
-
-        <p>
-            Acesse o painel administrativo interno do Django.
-        </p>
-
-        <a class="botao secundario" href="/admin/">
-            Abrir administração
-        </a>
-    </section>
-</div>
+    <a class="botao" href="{% url 'listar_obras' %}">
+        Acessar livros
+    </a>
+{% endif %}
 {% endblock %}
