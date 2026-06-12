@@ -5,45 +5,235 @@ Gestão | BiblioSys
 {% endblock %}
 
 {% block conteudo %}
+<style>
+    .acoes-administrativas {
+        display: grid;
+        grid-template-columns: repeat(
+            3,
+            minmax(0, 1fr)
+        );
+        gap: 18px;
+        margin: 28px 0 34px;
+    }
+
+    .acao-administrativa {
+        position: relative;
+        display: flex;
+        min-height: 175px;
+        padding: 24px;
+        overflow: hidden;
+        border-radius: 14px;
+        color: white;
+        text-decoration: none;
+        box-shadow: 0 8px 22px rgba(15, 23, 42, 0.15);
+        transition:
+            transform 0.18s ease,
+            box-shadow 0.18s ease;
+    }
+
+    .acao-administrativa:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 13px 28px rgba(15, 23, 42, 0.22);
+    }
+
+    .acao-contas {
+        background: linear-gradient(
+            135deg,
+            #1d4ed8,
+            #2563eb
+        );
+    }
+
+    .acao-solicitacoes {
+        background: linear-gradient(
+            135deg,
+            #c2410c,
+            #ea580c
+        );
+    }
+
+    .acao-historico {
+        background: linear-gradient(
+            135deg,
+            #5b21b6,
+            #7c3aed
+        );
+    }
+
+    .conteudo-acao {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .titulo-acao {
+        margin-bottom: 10px;
+        font-size: 23px;
+        font-weight: bold;
+    }
+
+    .descricao-acao {
+        max-width: 310px;
+        color: rgba(255, 255, 255, 0.88);
+        line-height: 1.5;
+    }
+
+    .rodape-acao {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: auto;
+        padding-top: 20px;
+        font-weight: bold;
+    }
+
+    .contador-acao {
+        padding: 5px 10px;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.14);
+        font-size: 13px;
+    }
+
+    .seta-acao {
+        font-size: 25px;
+    }
+
+    .decoracao-acao {
+        position: absolute;
+        right: -35px;
+        bottom: -55px;
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    @media (max-width: 900px) {
+        .acoes-administrativas {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
 <div class="cabecalho-pagina">
     <div>
         <h2>Área de Gestão</h2>
-        <p>Visão geral do sistema.</p>
-    </div>
 
-    <div class="acoes">
-        <a class="botao" href="{% url 'gestao_usuarios' %}">
-            Gerenciar contas
-        </a>
-
-        <a
-            class="botao botao-alerta"
-            href="{% url 'gestao_solicitacoes' %}"
-        >
-            Solicitações
-        </a>
+        <p>
+            Administração de contas, solicitações e auditoria
+            do BiblioSys.
+        </p>
     </div>
 </div>
+
+<div class="acoes-administrativas">
+    <a
+        class="acao-administrativa acao-contas"
+        href="{% url 'gestao_usuarios' %}"
+    >
+        <div class="conteudo-acao">
+            <div class="titulo-acao">
+                Gerenciar contas
+            </div>
+
+            <div class="descricao-acao">
+                Consulte, edite, desative ou exclua contas
+                cadastradas no sistema.
+            </div>
+
+            <div class="rodape-acao">
+                <span class="contador-acao">
+                    {{ total_contas }} conta{{ total_contas|pluralize }}
+                </span>
+
+                <span class="seta-acao">→</span>
+            </div>
+        </div>
+
+        <div class="decoracao-acao"></div>
+    </a>
+
+    <a
+        class="acao-administrativa acao-solicitacoes"
+        href="{% url 'gestao_solicitacoes' %}"
+    >
+        <div class="conteudo-acao">
+            <div class="titulo-acao">
+                Solicitações
+            </div>
+
+            <div class="descricao-acao">
+                Analise os pedidos de usuários que solicitaram
+                acesso como funcionários.
+            </div>
+
+            <div class="rodape-acao">
+                <span class="contador-acao">
+                    {{ total_pendentes }} pendente{{ total_pendentes|pluralize }}
+                </span>
+
+                <span class="seta-acao">→</span>
+            </div>
+        </div>
+
+        <div class="decoracao-acao"></div>
+    </a>
+
+    <a
+        class="acao-administrativa acao-historico"
+        href="{% url 'gestao_historico' %}"
+    >
+        <div class="conteudo-acao">
+            <div class="titulo-acao">
+                Histórico de ações
+            </div>
+
+            <div class="descricao-acao">
+                Consulte as operações realizadas pelas contas
+                e pelo próprio sistema.
+            </div>
+
+            <div class="rodape-acao">
+                <span class="contador-acao">
+                    Abrir auditoria
+                </span>
+
+                <span class="seta-acao">→</span>
+            </div>
+        </div>
+
+        <div class="decoracao-acao"></div>
+    </a>
+</div>
+
+<h3>Resumo administrativo</h3>
 
 <div class="cards">
     <div class="card">
         <strong>Contas cadastradas</strong>
-        <div class="card-numero">{{ total_contas }}</div>
+
+        <div class="card-numero">
+            {{ total_contas }}
+        </div>
     </div>
 
     <div class="card">
-        <strong>Leitores cadastrados</strong>
-        <div class="card-numero">{{ total_leitores }}</div>
-    </div>
+        <strong>Perfis de leitores</strong>
 
-    <div class="card">
-        <strong>Livros cadastrados</strong>
-        <div class="card-numero">{{ total_livros }}</div>
+        <div class="card-numero">
+            {{ total_leitores }}
+        </div>
     </div>
 
     <div class="card">
         <strong>Solicitações pendentes</strong>
-        <div class="card-numero">{{ total_pendentes }}</div>
+
+        <div class="card-numero">
+            {{ total_pendentes }}
+        </div>
     </div>
 </div>
 
@@ -63,12 +253,21 @@ Gestão | BiblioSys
         <tbody>
             {% for solicitacao in solicitacoes_recentes %}
                 <tr>
-                    <td>{{ solicitacao.usuario.username }}</td>
-                    <td>{{ solicitacao.usuario.email }}</td>
-                    <td>{{ solicitacao.criada_em|date:"d/m/Y H:i" }}</td>
+                    <td>
+                        {{ solicitacao.usuario.username }}
+                    </td>
+
+                    <td>
+                        {{ solicitacao.usuario.email }}
+                    </td>
+
+                    <td>
+                        {{ solicitacao.criada_em|date:"d/m/Y H:i" }}
+                    </td>
+
                     <td>
                         <a
-                            class="botao botao-pequeno"
+                            class="botao botao-alerta botao-pequeno"
                             href="{% url 'gestao_solicitacoes' %}"
                         >
                             Analisar
