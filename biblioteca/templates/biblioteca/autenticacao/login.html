@@ -5,23 +5,34 @@ Entrar | BiblioSys
 {% endblock %}
 
 {% block conteudo %}
-<h2>Entrar</h2>
+<div class="auth-shell">
+    <div class="auth-card">
+        <h2>Entrar</h2>
 
-<form method="post">
-    {% csrf_token %}
+        <p>
+            Acesse sua conta para continuar.
+        </p>
 
-    {{ formulario.as_p }}
+        <form method="post" novalidate>
+            {% csrf_token %}
 
-    <button class="botao" type="submit">
-        Entrar
-    </button>
-</form>
+            {{ formulario.as_p }}
 
-<p>
-    Ainda não possui conta?
+            <button
+                class="botao"
+                type="submit"
+            >
+                Entrar
+            </button>
+        </form>
 
-    <a href="{% url 'cadastro' %}">
-        Criar conta
-    </a>
-</p>
+        <p style="margin-top: 22px; text-align: center;">
+            Ainda não possui uma conta?
+
+            <a href="{% url 'cadastro' %}">
+                Criar conta
+            </a>
+        </p>
+    </div>
+</div>
 {% endblock %}
