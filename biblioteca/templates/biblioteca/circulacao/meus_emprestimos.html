@@ -1,0 +1,168 @@
+{% extends "biblioteca/base.html" %}
+
+{% block titulo %}
+Meus empréstimos | BiblioSys
+{% endblock %}
+
+{% block conteudo %}
+<div class="cabecalho-pagina">
+    <div>
+        <h2>Meus empréstimos</h2>
+        <p>Acompanhe livros, reservas e datas de devolução.</p>
+    </div>
+
+    <a
+        class="botao botao-secundario"
+        href="{% url 'listar_obras' %}"
+    >
+        Ver livros
+    </a>
+</div>
+
+<h3>Empréstimos ativos</h3>
+
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Livro</th>
+                <th>Exemplar</th>
+                <th>Retirada</th>
+                <th>Devolução prevista</th>
+                <th>Renovações</th>
+                <th>Situação</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for emprestimo in emprestimos_ativos %}
+                <tr>
+                    <td>{{ emprestimo.exemplar.obra.titulo }}</td>
+                    <td>{{ emprestimo.exemplar.numero }}</td>
+                    <td>
+                        {{ emprestimo.data_emprestimo|date:"d/m/Y H:i" }}
+                    </td>
+                    <td>
+                        {{ emprestimo.data_prevista_devolucao|date:"d/m/Y" }}
+                    </td>
+                    <td>{{ emprestimo.quantidade_renovacoes }}</td>
+                    <td>
+                        {% if emprestimo.esta_atrasado %}
+                            <span class="badge badge-recusada">
+                                Atrasado
+                            </span>
+                        {% else %}
+                            <span class="badge badge-funcionario">
+                                Em dia
+                            </span>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="6" class="vazio">
+                        Você não possui empréstimos ativos.
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<h3 style="margin-top: 30px;">Reservas e fila de espera</h3>
+
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Livro</th>
+                <th>Situação</th>
+                <th>Exemplar</th>
+                <th>Posição na fila</th>
+                <th>Prazo para retirada</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for reserva in reservas %}
+                <tr>
+                    <td>{{ reserva.obra.titulo }}</td>
+                    <td>{{ reserva.get_status_display }}</td>
+
+                    <td>
+                        {% if reserva.exemplar %}
+                            {{ reserva.exemplar.numero }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if reserva.status == "FILA" %}
+                            {{ reserva.posicao_fila }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if reserva.expira_em %}
+                            {{ reserva.expira_em|date:"d/m/Y H:i" }}
+                        {% else %}
+                            Aguardando disponibilidade
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5" class="vazio">
+                        Você não possui reservas ativas.
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<h3 style="margin-top: 30px;">Histórico</h3>
+
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Livro</th>
+                <th>Exemplar</th>
+                <th>Retirada</th>
+                <th>Devolução</th>
+                <th>Situação</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for emprestimo in historico %}
+                <tr>
+                    <td>{{ emprestimo.exemplar.obra.titulo }}</td>
+                    <td>{{ emprestimo.exemplar.numero }}</td>
+                    <td>
+                        {{ emprestimo.data_emprestimo|date:"d/m/Y" }}
+                    </td>
+                    <td>
+                        {% if emprestimo.data_devolucao %}
+                            {{ emprestimo.data_devolucao|date:"d/m/Y" }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td>{{ emprestimo.get_status_display }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5" class="vazio">
+                        Nenhum empréstimo finalizado.
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends "biblioteca/base.html" %}
+
+{% block titulo %}
+Reservas dos leitores | BiblioSys
+{% endblock %}
+
+{% block conteudo %}
+<div class="cabecalho-pagina">
+    <div>
+        <h2>Reservas dos leitores</h2>
+        <p>
+            Solicitações e livros que aguardam retirada.
+        </p>
+    </div>
+
+    <a
+        class="botao botao-secundario"
+        href="{% url 'listar_obras' %}"
+    >
+        Voltar aos livros
+    </a>
+</div>
+
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Leitor</th>
+                <th>Livro</th>
+                <th>Situação</th>
+                <th>Prazo</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for item in itens %}
+                {% with notificacao=item.notificacao %}
+                    <tr>
+                        <td>
+                            {{ notificacao.criada_em|date:"d/m/Y H:i" }}
+                        </td>
+
+                        <td>
+                            {{ notificacao.reserva.usuario.username }}
+                        </td>
+
+                        <td>
+                            {{ notificacao.reserva.obra.titulo }}
+                        </td>
+
+                        <td>
+                            {{ notificacao.reserva.get_status_display }}
+
+                            {% if not item.lida %}
+                                <span class="badge badge-pendente">
+                                    Nova
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if notificacao.reserva.expira_em %}
+                                {{ notificacao.reserva.expira_em|date:"d/m/Y H:i" }}
+                            {% else %}
+                                Aguardando exemplar
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <div class="acoes">
+                                {% if notificacao.reserva.status == "AGUARDANDO_RETIRADA" %}
+                                    <form
+                                        method="post"
+                                        action="{% url 'registrar_retirada' notificacao.reserva.id %}"
+                                        onsubmit="return confirm('Confirmar a retirada deste livro pelo leitor?');"
+                                    >
+                                        {% csrf_token %}
+
+                                        <button
+                                            class="botao botao-sucesso botao-pequeno"
+                                            type="submit"
+                                        >
+                                            Registrar retirada
+                                        </button>
+                                    </form>
+                                {% endif %}
+
+                                {% if not item.lida %}
+                                    <form
+                                        method="post"
+                                        action="{% url 'marcar_notificacao_lida' notificacao.id %}"
+                                    >
+                                        {% csrf_token %}
+
+                                        <button
+                                            class="botao botao-secundario botao-pequeno"
+                                            type="submit"
+                                        >
+                                            Marcar como lida
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% endwith %}
+            {% empty %}
+                <tr>
+                    <td colspan="6" class="vazio">
+                        Nenhuma reserva aguardando atendimento.
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

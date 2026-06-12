@@ -1,16 +1,45 @@
 from django.urls import path
 
 from . import views
+from . import views_circulacao
+from . import views_gestao_perfis
+from . import views_perfil
 
 
 urlpatterns = [
-    path("", views.home, name="home"),
+    path(
+        "",
+        views.home,
+        name="home",
+    ),
 
-    path("login/", views.entrar, name="login"),
-    path("cadastro/", views.cadastrar_usuario, name="cadastro"),
-    path("logout/", views.sair, name="logout"),
+    path(
+        "login/",
+        views.entrar,
+        name="login",
+    ),
+    path(
+        "cadastro/",
+        views.cadastrar_usuario,
+        name="cadastro",
+    ),
+    path(
+        "logout/",
+        views.sair,
+        name="logout",
+    ),
 
-    path("livros/", views.listar_obras, name="listar_obras"),
+    path(
+        "perfil/",
+        views_perfil.editar_meu_perfil,
+        name="editar_meu_perfil",
+    ),
+
+    path(
+        "livros/",
+        views.listar_obras,
+        name="listar_obras",
+    ),
     path(
         "livros/cadastrar/",
         views.cadastrar_obra,
@@ -59,6 +88,11 @@ urlpatterns = [
         name="gestao_usuarios",
     ),
     path(
+        "gestao/usuarios/<int:usuario_id>/editar/",
+        views_gestao_perfis.gestao_editar_usuario,
+        name="gestao_editar_usuario",
+    ),
+    path(
         "gestao/usuarios/<int:usuario_id>/excluir/",
         views.gestao_excluir_usuario,
         name="gestao_excluir_usuario",
@@ -77,5 +111,37 @@ urlpatterns = [
         "gestao/solicitacoes/<int:solicitacao_id>/recusar/",
         views.gestao_recusar_solicitacao,
         name="gestao_recusar_solicitacao",
+    ),
+
+    path(
+        "circulacao/meus-emprestimos/",
+        views_circulacao.meus_emprestimos,
+        name="meus_emprestimos",
+    ),
+    path(
+        "circulacao/livros/<int:obra_id>/solicitar/",
+        views_circulacao.solicitar_livro,
+        name="solicitar_livro",
+    ),
+    path(
+        "circulacao/notificacoes/",
+        views_circulacao.notificacoes_funcionarios,
+        name="notificacoes_funcionarios",
+    ),
+    path(
+        (
+            "circulacao/notificacoes/"
+            "<int:notificacao_id>/lida/"
+        ),
+        views_circulacao.marcar_notificacao_lida,
+        name="marcar_notificacao_lida",
+    ),
+    path(
+        (
+            "circulacao/reservas/"
+            "<int:reserva_id>/retirada/"
+        ),
+        views_circulacao.registrar_retirada,
+        name="registrar_retirada",
     ),
 ]
