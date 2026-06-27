@@ -9,6 +9,31 @@ from .models import Leitor, Obra
 User = get_user_model()
 
 
+class ObraModelTests(TestCase):
+    def setUp(self):
+        self.obra = Obra.objects.create(
+            titulo="Dom Casmurro",
+            autor="Machado de Assis",
+            isbn="9780000000001",
+            editora="Editora Teste",
+            ano_publicacao=1899,
+            categoria="Literatura",
+            quantidade=3,
+        )
+
+    def test_criacao_obra(self):
+        self.assertEqual(self.obra.titulo, "Dom Casmurro")
+        self.assertEqual(self.obra.autor, "Machado de Assis")
+        self.assertEqual(self.obra.isbn, "9780000000001")
+        self.assertEqual(self.obra.editora, "Editora Teste")
+        self.assertEqual(self.obra.ano_publicacao, 1899)
+        self.assertEqual(self.obra.categoria, "Literatura")
+        self.assertEqual(self.obra.quantidade, 3)
+
+    def test_str_obra(self):
+        self.assertEqual(str(self.obra), "Dom Casmurro")
+
+
 class ObraCRUDTests(TestCase):
     def setUp(self):
         self.funcionario = User.objects.create_user(
