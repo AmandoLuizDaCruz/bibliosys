@@ -327,6 +327,211 @@ class RottasListagemTests(TestCase):
         self.assertIn("pendentes", resposta.context)
 
 
+class FormulariosCRUDTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.admin = User.objects.create_superuser(
+            username="admin_crud",
+            email="admin_crud@email.com",
+            password="senha123",
+        )
+        self.funcionario = User.objects.create_user(
+            username="funcionario_crud",
+            email="funcionario_crud@email.com",
+            password="senha123",
+        )
+        grupo, _ = Group.objects.get_or_create(
+            name="Funcionarios"
+        )
+        self.funcionario.groups.add(grupo)
+        Leitor.objects.create(
+            usuario=self.funcionario,
+            nome_completo="Funcionário CRUD",
+            cpf="333.333.333-33",
+            email="funcionario_crud@email.com",
+            telefone="(35) 99999-9999",
+            endereco="Rua CRUD, 3",
+            tipo_vinculo="FUNCIONARIO",
+            ativo=True,
+        )
+
+    def test_cadastrar_obra_funcionario(self):
+        self.client.force_login(self.funcionario)
+        dados_obra = {
+            "titulo": "Nova Obra Test",
+            "autor": "Autor Test",
+            "isbn": "9999999999999",
+            "editora": "Editora Test",
+            "ano_publicacao": 2025,
+            "categoria": "Teste",
+            "quantidade": 5,
+        }
+        resposta = self.client.post(
+            reverse("cadastrar_obra"),
+            dados_obra,
+        )
+        self.assertEqual(resposta.status_code, 302)
+        self.assertTrue(
+            Obra.objects.filter(
+                titulo="Nova Obra Test"
+            ).exists()
+        )
+        obra = Obra.objects.get(titulo="Nova Obra Test")
+        self.assertEqual(obra.autor, "Autor Test")
+        self.assertEqual(obra.isbn, "9999999999999")
+        self.assertEqual(obra.quantidade, 5)
+
+    def test_editar_obra_funcionario(self):
+        obra = Obra.objects.create(
+            titulo="Obra para Editar",
+            autor="Autor Original",
+            isbn="1111111111111",
+            editora="Editora Original",
+            ano_publicacao=2020,
+            categoria="Original",
+            quantidade=2,
+        )
+        self.client.force_login(self.funcionario)
+        dados_atualizados = {
+            "titulo": "Obra Editada",
+            "autor": "Autor Original",
+            "isbn": obra.isbn,
+            "editora": "Editora Original",
+            "ano_publicacao": 2021,
+            "categoria": "Editada",
+            "quantidade": 8,
+        }
+        resposta = self.client.post(
+            reverse("editar_obra", args=[obra.id]),
+            dados_atualizados,
+        )
+        self.assertEqual(resposta.status_code, 302)
+        obra.refresh_from_db()
+        self.assertEqual(obra.titulo, "Obra Editada")
+        self.assertEqual(obra.ano_publicacao, 2021)
+        self.assertEqual(obra.quantidade, 8)
+
+    def test_cadastrar_leitor_admin(self):
+        self.client.force_login(self.admin)
+        dados_leitor = {
+            "nome_completo": "Novo Leitor",
+            "cpf": "444.444.444-44",
+            "email": "novo_leitor@email.com",
+            "telefone": "(35) 88888-8888",
+            "endereco": "Rua Novo, 44",
+            "tipo_vinculo": "ALUNO",
+            "ativo": "on",
+        }
+        resposta = self.client.post(
+            reverse("cadastrar_leitor"),
+            dados_leitor,
+        )
+        self.assertEqual(resposta.status_code, 302)
+        self.assertTrue(
+            Leitor.objects.filter(
+                email="novo_leitor@email.com"
+            ).exists()
+        )
+        leitor = Leitor.objects.get(
+            email="novo_leitor@email.com"
+        )
+        self.assertEqual(
+            leitor.nome_completo,
+            "Novo Leitor"
+        )
+        self.assertEqual(leitor.tipo_vinculo, "ALUNO")
+
+    def test_editar_leitor_admin(self):
+        leitor = Leitor.objects.create(
+            nome_completo="Leitor para Editar",
+            cpf="555.555.555-55",
+            email="leitor_editar@email.com",
+            telefone="(35) 77777-7777",
+            endereco="Rua Editar, 55",
+            tipo_vinculo="ALUNO",
+            ativo=True,
+        )
+        self.client.force_login(self.admin)
+        dados_atualizados = {
+            "nome_completo": "Leitor Editado",
+            "cpf": leitor.cpf,
+            "email": leitor.email,
+            "telefone": "(35) 66666-6666",
+            "endereco": "Rua Nova, 66",
+            "tipo_vinculo": "PROFESSOR",
+            "ativo": "on",
+        }
+        resposta = self.client.post(
+            reverse("editar_leitor", args=[leitor.id]),
+            dados_atualizados,
+        )
+        self.assertEqual(resposta.status_code, 302)
+        leitor.refresh_from_db()
+        self.assertEqual(
+            leitor.nome_completo,
+            "Leitor Editado"
+        )
+        self.assertEqual(leitor.tipo_vinculo, "PROFESSOR")
+        self.assertEqual(
+            leitor.telefone,
+            "(35) 66666-6666"
+        )
+
+    def test_cadastrar_obra_sem_permissao(self):
+        leitor = User.objects.create_user(
+            username="leitor_sem_perm",
+            email="leitor_sem_perm@email.com",
+            password="senha123",
+        )
+        self.client.force_login(leitor)
+        dados_obra = {
+            "titulo": "Obra Proibida",
+            "autor": "Autor Proibido",
+            "isbn": "0000000000000",
+            "editora": "Editora Proibida",
+            "ano_publicacao": 2025,
+            "categoria": "Proibida",
+            "quantidade": 1,
+        }
+        resposta = self.client.post(
+            reverse("cadastrar_obra"),
+            dados_obra,
+        )
+        self.assertEqual(resposta.status_code, 302)
+        self.assertFalse(
+            Obra.objects.filter(
+                titulo="Obra Proibida"
+            ).exists()
+        )
+
+    def test_cadastrar_leitor_sem_permissao(self):
+        leitor = User.objects.create_user(
+            username="leitor_sem_perm2",
+            email="leitor_sem_perm2@email.com",
+            password="senha123",
+        )
+        self.client.force_login(leitor)
+        dados_leitor = {
+            "nome_completo": "Leitor Proibido",
+            "cpf": "666.666.666-66",
+            "email": "leitor_proibido@email.com",
+            "telefone": "(35) 55555-5555",
+            "endereco": "Rua Proibida, 66",
+            "tipo_vinculo": "ALUNO",
+            "ativo": "on",
+        }
+        resposta = self.client.post(
+            reverse("cadastrar_leitor"),
+            dados_leitor,
+        )
+        self.assertEqual(resposta.status_code, 302)
+        self.assertFalse(
+            Leitor.objects.filter(
+                email="leitor_proibido@email.com"
+            ).exists()
+        )
+
+
 class ObraCRUDTests(TestCase):
     def setUp(self):
         self.funcionario = User.objects.create_user(
