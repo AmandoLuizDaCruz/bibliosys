@@ -196,4 +196,9 @@ urlpatterns = [
         views_auditoria.gestao_historico,
         name="gestao_historico",
     ),
+    path(
+        "multas/<int:multa_id>/pagar/",
+        views_leitores.confirmar_quitacao,
+        name="quitar_multas"
+    )
 ]
