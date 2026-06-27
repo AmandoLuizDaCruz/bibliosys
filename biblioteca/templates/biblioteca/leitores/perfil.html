@@ -173,7 +173,7 @@
                 <th>Dias de atraso</th>
                 <th>Valor</th>
                 <th>Situação</th>
-            </tr>
+                <th>Ação</th> </tr>
         </thead>
 
         <tbody>
@@ -192,10 +192,26 @@
                     <td>
                         {{ multa.get_status_display }}
                     </td>
+
+                    <td>
+                        {% if multa.status == "PENDENTE" %}
+                            <form 
+                                method="post" 
+                                action="{% url 'quitar_multas' multa.id %}"
+                                onsubmit="return confirm ('Confirmar o pagamento desta multa?');"
+                            >
+                                {% csrf_token %}
+                                <button class="botao botao-sucesso botao-pequeno" type="submit">
+                                    Marcar como Paga
+                                </button>
+                            </form>
+                        {% else %}
+                            —
+                        {% endif %} </td>
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan="4" class="vazio">
+                    <td colspan="5" class="vazio"> 
                         Nenhuma multa registrada.
                     </td>
                 </tr>

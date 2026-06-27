@@ -1,6 +1,7 @@
 import re
 
 from django.contrib import messages
+from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db.models import Q
@@ -200,6 +201,33 @@ def perfil_leitor(request, usuario_id):
         },
     )
 
+@funcionario_required
+@require_POST
+def confirmar_quitacao(
+    request,
+    multa_id,
+):
+    multa = get_object_or_404(
+        Multa,
+        id = multa_id,
+    )
+    if multa.status == Multa.Status.PENDENTE:
+        multa.status = multa.Status.PAGA
+        multa.paga_em = timezone.now()
+
+        multa.save(update_fields=['status', 'paga_em'])
+
+        messages.success(
+            request,
+            f"A multa no valor de R$ {multa.valor_total} foi marcada como paga."
+        )
+    else:
+        messages.warning(
+            request,
+            "Esta multa já foi paga ou cancelada."
+        )
+
+    return redirect("perfil_leitor", usuario_id=multa.emprestimo.usuario.id)
 
 @funcionario_required
 @require_POST
