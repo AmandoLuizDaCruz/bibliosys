@@ -90,7 +90,7 @@ urlpatterns = [
     # Compatibilidade com telas e testes anteriores.
     path(
         "livros/",
-        views_circulacao.meus_emprestimos,
+        views.listar_obras,
         name="listar_obras",
     ),
     path(
