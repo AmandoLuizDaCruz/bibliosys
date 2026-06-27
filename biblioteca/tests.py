@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.test import TestCase
+from django.test import TestCase, Client
 from django.urls import reverse
 from django.utils import timezone
 
@@ -202,6 +202,129 @@ class MultaModelTests(TestCase):
     def test_str_multa(self):
         esperado = f"Multa de leitor_multa - R$ 7.50"
         self.assertEqual(str(self.multa), esperado)
+
+
+class RottasListagemTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.admin = User.objects.create_superuser(
+            username="admin_listagem",
+            email="admin_listagem@email.com",
+            password="senha123",
+        )
+        self.leitor = User.objects.create_user(
+            username="leitor_listagem",
+            email="leitor_listagem@email.com",
+            password="senha123",
+        )
+        Leitor.objects.create(
+            usuario=self.leitor,
+            nome_completo="Leitor Teste",
+            cpf="111.111.111-11",
+            email="leitor_listagem@email.com",
+            telefone="(35) 99999-9999",
+            endereco="Rua Teste, 1",
+            tipo_vinculo="ALUNO",
+            ativo=True,
+        )
+        self.funcionario = User.objects.create_user(
+            username="funcionario_listagem",
+            email="funcionario_listagem@email.com",
+            password="senha123",
+        )
+        grupo, _ = Group.objects.get_or_create(
+            name="Funcionarios"
+        )
+        self.funcionario.groups.add(grupo)
+        Leitor.objects.create(
+            usuario=self.funcionario,
+            nome_completo="Funcionário Teste",
+            cpf="222.222.222-22",
+            email="funcionario_listagem@email.com",
+            telefone="(35) 99999-9999",
+            endereco="Rua Teste, 2",
+            tipo_vinculo="FUNCIONARIO",
+            ativo=True,
+        )
+        Obra.objects.create(
+            titulo="Obra Teste 1",
+            autor="Autor Teste",
+            isbn="1111111111111",
+            editora="Editora Teste",
+            ano_publicacao=2020,
+            categoria="Teste",
+            quantidade=1,
+        )
+
+    def test_listar_obras_requer_login(self):
+        resposta = self.client.get(reverse("listar_obras"))
+        self.assertEqual(resposta.status_code, 302)
+        self.assertIn("/login/", resposta.url)
+
+    def test_listar_obras_leitor_autenticado(self):
+        self.client.force_login(self.leitor)
+        resposta = self.client.get(reverse("listar_obras"))
+        self.assertEqual(resposta.status_code, 200)
+        self.assertTemplateUsed(resposta, "biblioteca/obras/lista.html")
+        self.assertIn("obras", resposta.context)
+
+    def test_listar_obras_funcionario_autenticado(self):
+        self.client.force_login(self.funcionario)
+        resposta = self.client.get(reverse("listar_obras"))
+        self.assertEqual(resposta.status_code, 200)
+        self.assertTemplateUsed(resposta, "biblioteca/obras/lista.html")
+
+    def test_listar_leitores_requer_admin(self):
+        self.client.force_login(self.leitor)
+        resposta = self.client.get(reverse("listar_leitores"))
+        self.assertEqual(resposta.status_code, 302)
+        self.assertIn("/", resposta.url)
+
+    def test_listar_leitores_admin_autenticado(self):
+        self.client.force_login(self.admin)
+        resposta = self.client.get(reverse("listar_leitores"))
+        self.assertEqual(resposta.status_code, 200)
+        self.assertTemplateUsed(resposta, "biblioteca/leitores/lista.html")
+        self.assertIn("leitores", resposta.context)
+
+    def test_gestao_dashboard_requer_admin(self):
+        self.client.force_login(self.leitor)
+        resposta = self.client.get(reverse("gestao_dashboard"))
+        self.assertEqual(resposta.status_code, 302)
+
+    def test_gestao_dashboard_admin_autenticado(self):
+        self.client.force_login(self.admin)
+        resposta = self.client.get(reverse("gestao_dashboard"))
+        self.assertEqual(resposta.status_code, 200)
+        self.assertTemplateUsed(resposta, "biblioteca/gestao/dashboard.html")
+        self.assertIn("total_contas", resposta.context)
+
+    def test_gestao_usuarios_requer_admin(self):
+        self.client.force_login(self.leitor)
+        resposta = self.client.get(reverse("gestao_usuarios"))
+        self.assertEqual(resposta.status_code, 302)
+
+    def test_gestao_usuarios_admin_autenticado(self):
+        self.client.force_login(self.admin)
+        resposta = self.client.get(reverse("gestao_usuarios"))
+        self.assertEqual(resposta.status_code, 200)
+        self.assertTemplateUsed(resposta, "biblioteca/gestao/usuarios.html")
+        self.assertIn("contas", resposta.context)
+
+    def test_gestao_solicitacoes_requer_admin(self):
+        self.client.force_login(self.leitor)
+        resposta = self.client.get(reverse("gestao_solicitacoes"))
+        self.assertEqual(resposta.status_code, 302)
+
+    def test_gestao_solicitacoes_admin_autenticado(self):
+        self.client.force_login(self.admin)
+        resposta = self.client.get(reverse("gestao_solicitacoes"))
+        self.assertEqual(resposta.status_code, 200)
+        self.assertTemplateUsed(
+            resposta,
+            "biblioteca/gestao/solicitacoes.html"
+        )
+        self.assertIn("pendentes", resposta.context)
 
 
 class ObraCRUDTests(TestCase):
