@@ -666,7 +666,7 @@ class ObraCRUDTests(TestCase):
 
         self.assertFalse(
             Obra.objects.filter(
-                id=self.obra.id
+                id=self.obra.id, ativo=True
             ).exists()
         )
 
