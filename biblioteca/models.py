@@ -68,6 +68,7 @@ class Obra(models.Model):
     editora = models.CharField(max_length=150)
     ano_publicacao = models.PositiveIntegerField()
     categoria = models.CharField(max_length=100)
+    ativo = models.BooleanField(default=True)
 
     quantidade = models.PositiveIntegerField(
         default=1,

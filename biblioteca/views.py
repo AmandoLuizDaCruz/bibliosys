@@ -155,7 +155,7 @@ def sair(request):
 
 @login_required(login_url="login")
 def listar_obras(request):
-    obras = Obra.objects.all().order_by("titulo")
+    obras = Obra.objects.filter(ativo=True).order_by("titulo")
 
     return render(
         request,
@@ -275,7 +275,8 @@ def excluir_obra(request, obra_id):
     )
 
     if request.method == "POST":
-        obra.delete()
+        obra.ativo = False
+        obra.save()
 
         messages.success(
             request,

@@ -70,6 +70,7 @@ def meus_emprestimos(request):
 
     obras = (
         Obra.objects
+        .filter(ativo=True)
         .annotate(
             exemplares_disponiveis=Count(
                 "exemplares",
